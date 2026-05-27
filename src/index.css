@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+@theme {
+  --font-heading: "Georgia", "Times New Roman", serif;
+  --font-body: "Trebuchet MS", "Gill Sans", "Avenir Next", sans-serif;
+}
+
+@layer base {
+  :root {
+    color: #111827;
+    background: #ffffff;
+    font-family: var(--font-body);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    background: #ffffff;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+}
+
+@layer utilities {
+  .font-heading {
+    font-family: var(--font-heading);
+  }
+}
+
+@keyframes flashPulse {
+  0% {
+    opacity: 0;
+  }
+
+  18% {
+    opacity: 0.95;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes heroBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes heroPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+}
