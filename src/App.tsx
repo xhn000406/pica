@@ -39,6 +39,7 @@ function App() {
   const [borderTone] = useState<BorderToneId>('butter')
   const [filterId, setFilterId] = useState<FilterId>('original')
   const [polaroidPaperId, setPolaroidPaperId] = useState<PolaroidPaperId>('white')
+  const [polaroidFooterText, setPolaroidFooterText] = useState('')
   const polaroidBackdropId: PolaroidBackdropId = 'none'
   const polaroidFrameId: PolaroidFrameId = 'none'
   const [stickerIds] = useState<StickerId[]>(['spark', 'date'])
@@ -164,6 +165,7 @@ function App() {
     setIsCaptureLocked(false)
     setIsEditModalOpen(false)
     setDownloadState('idle')
+    setPolaroidFooterText('')
     goToPage(nextPage)
   }
 
@@ -251,6 +253,7 @@ function App() {
           paperId={polaroidPaperId}
           backdropId={polaroidBackdropId}
           frameId={polaroidFrameId}
+          footerText={polaroidFooterText}
           downloadState={downloadState}
           onDownload={handleMockDownload}
           onRetake={() => resetSession('camera')}
@@ -355,8 +358,10 @@ function App() {
               paperId={polaroidPaperId}
               backdropId={polaroidBackdropId}
               frameId={polaroidFrameId}
+              footerText={polaroidFooterText}
               onFilterChange={setFilterId}
               onPaperChange={setPolaroidPaperId}
+              onFooterTextChange={setPolaroidFooterText}
               onBack={() => setIsEditModalOpen(false)}
               onContinue={() => {
                 setIsEditModalOpen(false)

@@ -15,6 +15,7 @@ type PolaroidPreviewProps = {
   paperId: PolaroidPaperId
   backdropId: PolaroidBackdropId
   frameId: PolaroidFrameId
+  footerText?: string
   compact?: boolean
   exportRef?: RefObject<HTMLDivElement | null>
 }
@@ -102,6 +103,7 @@ export function PolaroidPreview({
   paperId,
   backdropId,
   frameId,
+  footerText = '',
   compact = false,
   exportRef,
 }: PolaroidPreviewProps) {
@@ -118,7 +120,7 @@ export function PolaroidPreview({
     >
       <div className={`rounded-[30px] p-3 ${backdropStyles[backdropId]}`}>
         <div
-          className={`rotate-[-1.2deg] rounded-[26px] border border-black/5 ${
+          className={`rounded-[26px] border border-black/5 ${
             compact ? 'p-3' : 'p-4'
           }`}
           style={{
@@ -160,25 +162,14 @@ export function PolaroidPreview({
             </div>
           </div>
 
-          <div className="mt-3 flex items-end justify-between gap-4 px-1">
-            <div>
-              <p className={`${compact ? 'text-lg' : 'text-2xl'} font-heading leading-none`}>
-                {t('polaroid.title')}
-              </p>
-              <p
-                className={`${compact ? 'mt-0.5 text-[7px]' : 'mt-1 text-[8px]'} font-semibold uppercase tracking-[0.24em]`}
-                style={{ color: paper.muted }}
-              >
-                {t('polaroid.subtitle')}
-              </p>
-            </div>
+          {footerText.trim() ? (
             <p
-              className={`${compact ? 'text-[7px]' : 'text-[8px]'} text-right font-semibold uppercase tracking-[0.22em]`}
+              className={`${compact ? 'mt-2 text-xs' : 'mt-3 text-sm'} px-1 text-center font-semibold tracking-[0.08em]`}
               style={{ color: paper.muted }}
             >
-              {t('polaroid.date')}
+              {footerText.trim()}
             </p>
-          </div>
+          ) : null}
         </div>
       </div>
     </div>

@@ -19,6 +19,7 @@ type ExportPageProps = {
   paperId: PolaroidPaperId
   backdropId: PolaroidBackdropId
   frameId: PolaroidFrameId
+  footerText: string
   downloadState: 'idle' | 'success'
   onDownload: () => void
   onRetake: () => void
@@ -30,6 +31,7 @@ export function ExportPage({
   paperId,
   backdropId,
   frameId,
+  footerText,
   downloadState,
   onDownload,
   onRetake,
@@ -51,6 +53,7 @@ export function ExportPage({
         paperId,
         backdropId,
         frameId,
+        footerText,
       })
       const file = new File([blob], 'pica-booth-photo-strip.png', { type: 'image/png' })
       const prefersShare = window.matchMedia('(pointer: coarse)').matches
@@ -119,6 +122,7 @@ export function ExportPage({
             paperId={paperId}
             backdropId={backdropId}
             frameId={frameId}
+            footerText={footerText}
           />
         </div>
       </section>

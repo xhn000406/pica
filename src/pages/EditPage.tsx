@@ -17,8 +17,10 @@ type EditPageProps = {
   paperId: PolaroidPaperId
   backdropId: PolaroidBackdropId
   frameId: PolaroidFrameId
+  footerText: string
   onFilterChange: (filter: FilterId) => void
   onPaperChange: (paperId: PolaroidPaperId) => void
+  onFooterTextChange: (footerText: string) => void
   onBack: () => void
   onContinue: () => void
 }
@@ -37,8 +39,10 @@ export function EditPage({
   paperId,
   backdropId,
   frameId,
+  footerText,
   onFilterChange,
   onPaperChange,
+  onFooterTextChange,
   onBack,
   onContinue,
 }: EditPageProps) {
@@ -98,6 +102,7 @@ export function EditPage({
               paperId={paperId}
               backdropId={backdropId}
               frameId={frameId}
+              footerText={footerText}
               compact
             />
           </section>
@@ -129,6 +134,20 @@ export function EditPage({
                   </button>
                 ))}
               </div>
+            </EditorGroup>
+
+            <EditorGroup
+              icon={<Palette size={17} />}
+              title={t('edit.signatureTitle')}
+              note={t('edit.signatureNote')}
+            >
+              <input
+                type="text"
+                value={footerText}
+                onChange={(event) => onFooterTextChange(event.target.value.slice(0, 32))}
+                placeholder={t('edit.signaturePlaceholder')}
+                className="w-full rounded-2xl border border-[#ead8d1] bg-white px-4 py-3 text-sm font-semibold text-[#161316] outline-none transition placeholder:text-[#b9a6aa] focus:border-[#161316]"
+              />
             </EditorGroup>
 
             <EditorGroup

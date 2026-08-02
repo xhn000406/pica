@@ -12,6 +12,7 @@ type ExportPolaroidOptions = {
   paperId: PolaroidPaperId
   backdropId: PolaroidBackdropId
   frameId: PolaroidFrameId
+  footerText: string
 }
 
 const paperColors: Record<PolaroidPaperId, string> = {
@@ -118,12 +119,14 @@ export async function createPolaroidPng({
   paperId,
   backdropId,
   frameId,
+  footerText,
 }: ExportPolaroidOptions): Promise<Blob> {
+  const hasFooter = Boolean(footerText.trim())
   const canvas = document.createElement('canvas')
   // The export is cropped exactly to the physical photo strip. Page background
   // and surrounding UI are deliberately outside this canvas.
   canvas.width = 960
-  canvas.height = 4140
+  canvas.height = hasFooter ? 4040 : 3916
   const context = canvas.getContext('2d')
   if (!context) throw new Error('Canvas is not available')
 
@@ -186,17 +189,12 @@ export async function createPolaroidPng({
     }
   }
 
-  context.fillStyle = textColor
-  context.textAlign = 'left'
-  context.font = 'bold 70px Georgia, serif'
-  context.fillText('Pica Booth', contentX, 3945)
-  context.fillStyle = paperId === 'black' ? '#cbbfc2' : '#9a8281'
-  context.font = '600 20px system-ui, sans-serif'
-  context.letterSpacing = '4px'
-  context.fillText('ONE SOFT POLAROID · FOUR CUTS', contentX, 4000)
-  context.textAlign = 'right'
-  context.fillText('TODAY', contentX + contentWidth, 4055)
-  context.letterSpacing = '0px'
+  if (hasFooter) {
+    context.fillStyle = textColor
+    context.textAlign = 'center'
+    context.font = '600 36px system-ui, sans-serif'
+    context.fillText(footerText.trim(), canvas.width / 2, 3935)
+  }
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('PNG encoding failed'))), 'image/png')
