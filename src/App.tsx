@@ -2,7 +2,6 @@ import { House } from 'lucide-react'
 import { startTransition, useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 
-import { PhotoStripPreview } from './components/PhotoStripPreview'
 import { StepRail } from './components/StepRail'
 import { getMockPhotos } from './data/mockPhotos'
 import { CameraPage } from './pages/CameraPage'
@@ -14,6 +13,10 @@ import type {
   AppPage,
   BorderToneId,
   FilterId,
+  MockPhoto,
+  PolaroidBackdropId,
+  PolaroidFrameId,
+  PolaroidPaperId,
   StickerId,
 } from './types'
 
@@ -28,21 +31,24 @@ function App() {
   const captureTimerRef = useRef<number | null>(null)
 
   const [page, setPage] = useState<AppPage>('start')
-  const [capturedPhotoIndexes, setCapturedPhotoIndexes] = useState<number[]>([])
+  const [capturedPhotos, setCapturedPhotos] = useState<MockPhoto[]>([])
   const [countdown, setCountdown] = useState<number | null>(null)
   const [isFlashing, setIsFlashing] = useState(false)
   const [isCaptureLocked, setIsCaptureLocked] = useState(false)
-  const [borderTone, setBorderTone] = useState<BorderToneId>('butter')
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [borderTone] = useState<BorderToneId>('butter')
   const [filterId, setFilterId] = useState<FilterId>('original')
-  const [stickerIds, setStickerIds] = useState<StickerId[]>(['spark', 'date'])
+  const [polaroidPaperId, setPolaroidPaperId] = useState<PolaroidPaperId>('white')
+  const polaroidBackdropId: PolaroidBackdropId = 'none'
+  const polaroidFrameId: PolaroidFrameId = 'none'
+  const [stickerIds] = useState<StickerId[]>(['spark', 'date'])
   const [downloadState, setDownloadState] = useState<'idle' | 'success'>('idle')
 
   const mockPhotos = getMockPhotos(locale)
-  const capturedPhotos = capturedPhotoIndexes.map((index) => mockPhotos[index])
   const previewPhotos =
-    capturedPhotoIndexes.length === totalShots ? capturedPhotos : mockPhotos
+    capturedPhotos.length === totalShots ? capturedPhotos : mockPhotos
   const livePreviewPhoto =
-    mockPhotos[capturedPhotoIndexes.length % mockPhotos.length]
+    mockPhotos[capturedPhotos.length % mockPhotos.length]
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -79,10 +85,50 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!isEditModalOpen) {
+      return
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsEditModalOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isEditModalOpen])
+
   const goToPage = (nextPage: AppPage) => {
+    if (nextPage !== 'edit') {
+      setIsEditModalOpen(false)
+    }
+
     startTransition(() => {
       setPage(nextPage)
     })
+  }
+
+  const openEditModal = () => {
+    if (capturedPhotos.length !== totalShots) {
+      return
+    }
+
+    setIsEditModalOpen(true)
+  }
+
+  const handleStepSelect = (nextPage: AppPage) => {
+    if (!canVisitPage(nextPage)) {
+      return
+    }
+
+    if (nextPage === 'edit') {
+      openEditModal()
+      return
+    }
+
+    goToPage(nextPage)
   }
 
   const canVisitPage = (targetPage: AppPage) => {
@@ -90,7 +136,7 @@ function App() {
       return true
     }
 
-    return capturedPhotoIndexes.length === totalShots
+    return capturedPhotos.length === totalShots
   }
 
   const clearCaptureTimers = () => {
@@ -112,16 +158,17 @@ function App() {
 
   const resetSession = (nextPage: AppPage = 'camera') => {
     clearCaptureTimers()
-    setCapturedPhotoIndexes([])
+    setCapturedPhotos([])
     setCountdown(null)
     setIsFlashing(false)
     setIsCaptureLocked(false)
+    setIsEditModalOpen(false)
     setDownloadState('idle')
     goToPage(nextPage)
   }
 
-  const handleCapture = () => {
-    if (isCaptureLocked || capturedPhotoIndexes.length >= totalShots) {
+  const handleCapture = (captureFrame: () => string | null) => {
+    if (isCaptureLocked || capturedPhotos.length >= totalShots) {
       return
     }
 
@@ -141,8 +188,28 @@ function App() {
 
       clearCaptureTimers()
       setCountdown(null)
+      const capturedSrc = captureFrame()
+
+      if (!capturedSrc) {
+        setIsCaptureLocked(false)
+        return
+      }
+
       setIsFlashing(true)
-      setCapturedPhotoIndexes((previous) => [...previous, previous.length])
+      setCapturedPhotos((previous) => {
+        const shotNumber = previous.length + 1
+
+        return [
+          ...previous,
+          {
+            id: `camera-shot-${Date.now()}-${shotNumber}`,
+            title: t('camera.capturedTitle', { count: shotNumber }),
+            caption: t('camera.capturedCaption'),
+            src: capturedSrc,
+            accent: '#0f9d8a',
+          },
+        ]
+      })
 
       flashTimerRef.current = window.setTimeout(() => {
         setIsFlashing(false)
@@ -152,14 +219,6 @@ function App() {
         setIsCaptureLocked(false)
       }, 360)
     }, 760)
-  }
-
-  const toggleSticker = (stickerId: StickerId) => {
-    setStickerIds((current) =>
-      current.includes(stickerId)
-        ? current.filter((item) => item !== stickerId)
-        : [...current, stickerId],
-    )
   }
 
   const handleMockDownload = () => {
@@ -174,30 +233,13 @@ function App() {
         <CameraPage
           capturedPhotos={capturedPhotos}
           livePreviewPhoto={livePreviewPhoto}
-          borderTone={borderTone}
           filterId={filterId}
-          stickerIds={stickerIds}
           countdown={countdown}
           isFlashing={isFlashing}
           isCaptureLocked={isCaptureLocked}
           onCapture={handleCapture}
           onRestart={() => resetSession('camera')}
-          onContinue={() => goToPage('edit')}
-        />
-      )
-      break
-    case 'edit':
-      pageContent = (
-        <EditPage
-          photos={capturedPhotos}
-          borderTone={borderTone}
-          filterId={filterId}
-          stickerIds={stickerIds}
-          onBorderToneChange={setBorderTone}
-          onFilterChange={setFilterId}
-          onToggleSticker={toggleSticker}
-          onBack={() => goToPage('camera')}
-          onContinue={() => goToPage('export')}
+          onContinue={openEditModal}
         />
       )
       break
@@ -205,9 +247,10 @@ function App() {
       pageContent = (
         <ExportPage
           photos={capturedPhotos}
-          borderTone={borderTone}
           filterId={filterId}
-          stickerIds={stickerIds}
+          paperId={polaroidPaperId}
+          backdropId={polaroidBackdropId}
+          frameId={polaroidFrameId}
           downloadState={downloadState}
           onDownload={handleMockDownload}
           onRetake={() => resetSession('camera')}
@@ -229,35 +272,44 @@ function App() {
   }
 
   return (
-    <div ref={shellRef} className="min-h-screen bg-white text-[#111827]">
+    <div
+      ref={shellRef}
+      className="min-h-screen bg-[#fffaf7] text-[#161316] selection:bg-[#ffdce7]"
+    >
       <div className="mx-auto flex min-h-screen w-full max-w-[1320px] flex-col px-4 sm:px-6 lg:px-8">
-        <header className="sticky top-0 z-20 bg-white/96 backdrop-blur">
-          <div className="flex flex-col gap-4 border-b border-[#edf1f5] py-5 lg:flex-row lg:items-center lg:justify-between">
+        <header className="sticky top-0 z-20 bg-[#fffaf7]/92 backdrop-blur-xl">
+          <div className="flex flex-col gap-4 border-b border-[#f0ded7] py-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0f9d8a] text-white shadow-[0_12px_24px_rgba(15,157,138,0.2)]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#ead8d1] bg-white text-[#161316] shadow-[0_10px_24px_rgba(120,86,68,0.08)]">
                   <House size={20} />
+                </div>
+                <div className="hidden leading-none sm:block">
+                  <p className="font-heading text-xl text-[#161316]">Pica Booth</p>
+                  <p className="mt-1 text-[10px] uppercase tracking-[0.28em] text-[#a77f85]">
+                    self studio
+                  </p>
                 </div>
               </div>
 
               <StepRail
-                currentPage={page}
-                onSelect={(nextPage) => canVisitPage(nextPage) && goToPage(nextPage)}
+                currentPage={isEditModalOpen ? 'edit' : page}
+                onSelect={handleStepSelect}
                 isStepEnabled={canVisitPage}
               />
             </div>
 
-            <div className="flex items-center gap-2 self-start rounded-2xl border border-[#e7ebf0] bg-white p-1 shadow-[0_10px_24px_rgba(15,23,42,0.04)] lg:self-auto">
-              <span className="px-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#667085]">
+            <div className="flex items-center gap-1 self-start rounded-full border border-[#ead8d1] bg-white/82 p-1 shadow-[0_10px_24px_rgba(120,86,68,0.06)] lg:self-auto">
+              <span className="px-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#9b7a7f]">
                 {t('common.languageSwitch')}
               </span>
               <button
                 type="button"
                 onClick={() => setLocale('zh-CN')}
-                className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                   locale === 'zh-CN'
-                    ? 'bg-[#0f9d8a] text-white'
-                    : 'text-[#475467] hover:bg-[#f6f8fb]'
+                    ? 'bg-[#161316] text-white'
+                    : 'text-[#6f6264] hover:bg-[#fff2f5]'
                 }`}
               >
                 {t('common.chinese')}
@@ -265,10 +317,10 @@ function App() {
               <button
                 type="button"
                 onClick={() => setLocale('en-US')}
-                className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                   locale === 'en-US'
-                    ? 'bg-[#0f9d8a] text-white'
-                    : 'text-[#475467] hover:bg-[#f6f8fb]'
+                    ? 'bg-[#161316] text-white'
+                    : 'text-[#6f6264] hover:bg-[#fff2f5]'
                 }`}
               >
                 {t('common.english')}
@@ -277,24 +329,43 @@ function App() {
           </div>
         </header>
 
-        <main ref={pageRef} className="flex-1 py-8 lg:py-10">
+        <main ref={pageRef} className="flex-1 py-7 lg:py-10">
           <div className="relative">{pageContent}</div>
         </main>
 
         <footer className="pb-8 pt-2">
-          <div className="flex flex-col gap-4 rounded-[28px] border border-[#e7ebf0] bg-[#fbfcfd] px-5 py-5 text-sm text-[#667085] shadow-[0_16px_36px_rgba(15,23,42,0.04)] md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center justify-between border-t border-[#f0ded7] px-1 pt-5 text-xs uppercase tracking-[0.22em] text-[#a4888c]">
             <p>{t('app.footerGuardrails')}</p>
-
-            <PhotoStripPreview
-              photos={mockPhotos}
-              borderTone={borderTone}
-              filterId={filterId}
-              stickerIds={stickerIds}
-              compact
-            />
           </div>
         </footer>
       </div>
+
+      {isEditModalOpen ? (
+        <div
+          className="fixed inset-0 z-40 overflow-y-auto bg-[#161316]/28 px-4 py-6 backdrop-blur-md sm:py-8"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('edit.polaroidTitle')}
+          onClick={() => setIsEditModalOpen(false)}
+        >
+          <div onClick={(event) => event.stopPropagation()}>
+            <EditPage
+              photos={capturedPhotos}
+              filterId={filterId}
+              paperId={polaroidPaperId}
+              backdropId={polaroidBackdropId}
+              frameId={polaroidFrameId}
+              onFilterChange={setFilterId}
+              onPaperChange={setPolaroidPaperId}
+              onBack={() => setIsEditModalOpen(false)}
+              onContinue={() => {
+                setIsEditModalOpen(false)
+                goToPage('export')
+              }}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

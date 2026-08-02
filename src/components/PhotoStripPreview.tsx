@@ -7,6 +7,7 @@ type PhotoStripPreviewProps = {
   filterId: FilterId
   stickerIds: StickerId[]
   compact?: boolean
+  sidebar?: boolean
   withPlaceholders?: boolean
 }
 
@@ -15,19 +16,19 @@ const borderStyles: Record<
   { shell: string; panel: string; badge: string }
 > = {
   butter: {
-    shell: '#fff7df',
-    panel: '#fffef7',
-    badge: '#f3b758',
+    shell: '#fff7e7',
+    panel: '#fffdf8',
+    badge: '#dfad58',
   },
   blush: {
-    shell: '#ffe8ef',
+    shell: '#ffe4ed',
     panel: '#fff9fb',
-    badge: '#ec7d9d',
+    badge: '#db7891',
   },
   mint: {
-    shell: '#e2fff1',
-    panel: '#f9fffb',
-    badge: '#4db88a',
+    shell: '#e9fbf4',
+    panel: '#fbfffd',
+    badge: '#78b89a',
   },
   midnight: {
     shell: '#292733',
@@ -49,22 +50,22 @@ const stickerLayouts: Record<
 > = {
   spark: {
     label: 'spark',
-    className: 'bg-[#fff2b8] text-[#6d4f1f]',
+    className: 'bg-[#fff1bd] text-[#6d4f1f]',
     style: { top: '18%', right: '-12px', transform: 'rotate(10deg)' },
   },
   bestie: {
     label: 'bestie',
-    className: 'bg-[#ffc3db] text-[#7e2f55]',
+    className: 'bg-[#ffd0df] text-[#7e2f55]',
     style: { top: '42%', left: '-12px', transform: 'rotate(-8deg)' },
   },
   date: {
     label: '05.27',
-    className: 'bg-[#dff7ff] text-[#21586a]',
+    className: 'bg-[#dff4ff] text-[#21586a]',
     style: { bottom: '20%', right: '-10px', transform: 'rotate(8deg)' },
   },
   flash: {
     label: 'flash',
-    className: 'bg-[#d8ffe4] text-[#27633b]',
+    className: 'bg-[#def9e9] text-[#27633b]',
     style: { bottom: '8%', left: '-10px', transform: 'rotate(-6deg)' },
   },
 }
@@ -75,6 +76,7 @@ export function PhotoStripPreview({
   filterId,
   stickerIds,
   compact = false,
+  sidebar = false,
   withPlaceholders = false,
 }: PhotoStripPreviewProps) {
   const { t } = useI18n()
@@ -97,25 +99,38 @@ export function PhotoStripPreview({
     date: '05.27',
     flash: t('strip.stickerFlash'),
   }
+  const isSmall = compact || sidebar
 
   return (
     <div
-      className={`photo-strip relative mx-auto w-full max-w-[280px] rounded-[32px] border border-black/5 p-4 shadow-[0_26px_60px_rgba(83,63,42,0.18)] ${
-        compact ? 'max-w-[220px]' : ''
+      className={`photo-strip relative mx-auto w-full max-w-[292px] rounded-[26px] border border-white p-4 shadow-[0_28px_70px_rgba(109,77,64,0.18)] ring-1 ring-[#ead8d1]/70 ${
+        compact ? 'max-w-[230px] rounded-[22px] p-3' : ''
+      } ${
+        sidebar ? 'max-w-[268px] rounded-[24px] p-3 shadow-[0_24px_60px_rgba(109,77,64,0.16)]' : ''
       }`}
       style={{ backgroundColor: tone.shell }}
     >
-      <div className="mb-3 flex items-center justify-between px-1">
+      <div className={`${sidebar ? 'mb-2.5' : 'mb-3'} flex items-center justify-between px-1`}>
         <div>
-          <p className="font-heading text-lg leading-none text-[#2a2019]">
+          <p
+            className={`font-heading leading-none text-[#2a2019] ${
+              sidebar ? 'text-base' : 'text-lg'
+            }`}
+          >
             {t('strip.title')}
           </p>
-          <p className="mt-1 text-[10px] uppercase tracking-[0.28em] text-[#7b6a5d]">
+          <p
+            className={`mt-1 uppercase text-[#8f7477] ${
+              sidebar ? 'text-[8px] tracking-[0.24em]' : 'text-[9px] tracking-[0.28em]'
+            }`}
+          >
             {t('strip.subtitle')}
           </p>
         </div>
         <span
-          className="rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white"
+          className={`rounded-full font-semibold uppercase tracking-[0.2em] text-white ${
+            sidebar ? 'px-2 py-1 text-[8px]' : 'px-2.5 py-1 text-[9px]'
+          }`}
           style={{ backgroundColor: tone.badge }}
         >
           {t('strip.ready')}
@@ -123,7 +138,11 @@ export function PhotoStripPreview({
       </div>
 
       <div
-        className="relative space-y-3 rounded-[24px] border border-black/6 p-3"
+        className={`relative space-y-3 rounded-[20px] border border-black/5 p-3 ${
+          compact ? 'space-y-2.5 rounded-[18px] p-2.5' : ''
+        } ${
+          sidebar ? 'space-y-2 rounded-[18px] p-2.5' : ''
+        }`}
         style={{
           backgroundColor: tone.panel,
           color: borderTone === 'midnight' ? '#fff8ef' : '#2c221a',
@@ -135,18 +154,24 @@ export function PhotoStripPreview({
           return (
             <article
               key={photo.id}
-              className={`relative overflow-hidden rounded-[20px] border border-black/6 ${
-                compact ? 'aspect-[4/4.9]' : 'aspect-[4/4.7]'
+              className={`relative overflow-hidden rounded-[14px] border border-black/5 ${
+                isSmall ? 'aspect-[4/4.85] rounded-[12px]' : 'aspect-[4/4.65]'
               }`}
-              style={{ background: isPlaceholder ? '#f2eadf' : '#ffffff' }}
+              style={{ background: isPlaceholder ? '#f5ebe4' : '#ffffff' }}
             >
               {isPlaceholder ? (
-                <div className="grid h-full place-items-center bg-[radial-gradient(circle_at_top,_#fff_0%,_#efe4d6_55%,_#ead8c2_100%)] text-center text-[#8d7c6e]">
+                <div className="grid h-full place-items-center bg-[radial-gradient(circle_at_top,_#fff_0%,_#f5ebe4_58%,_#ecd9d3_100%)] text-center text-[#9a8281]">
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.36em]">
+                    <p
+                      className={`uppercase tracking-[0.32em] ${
+                        sidebar ? 'text-[8px]' : 'text-[9px]'
+                      }`}
+                    >
                       {t('strip.openSlot')} 0{index + 1}
                     </p>
-                    <p className="mt-2 text-sm font-semibold">{t('strip.waitingShot')}</p>
+                    <p className={`${sidebar ? 'mt-1.5 text-[11px]' : 'mt-2 text-xs'} font-semibold`}>
+                      {t('strip.waitingShot')}
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -157,9 +182,19 @@ export function PhotoStripPreview({
                     className="h-full w-full object-cover"
                     style={{ filter: filterStyles[filterId] }}
                   />
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/48 to-transparent px-4 pb-3 pt-10 text-white">
-                    <p className="font-heading text-base leading-none">{photo.title}</p>
-                    <p className="mt-1 text-xs uppercase tracking-[0.22em] text-white/75">
+                  <div
+                    className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/42 to-transparent text-white ${
+                      sidebar ? 'px-2.5 pb-2.5 pt-8' : 'px-3 pb-3 pt-10'
+                    }`}
+                  >
+                    <p className={`font-heading leading-none ${sidebar ? 'text-xs' : 'text-sm'}`}>
+                      {photo.title}
+                    </p>
+                    <p
+                      className={`mt-1 uppercase tracking-[0.2em] text-white/75 ${
+                        sidebar ? 'text-[8px]' : 'text-[10px]'
+                      }`}
+                    >
                       {photo.caption}
                     </p>
                   </div>
@@ -175,7 +210,7 @@ export function PhotoStripPreview({
           return (
             <span
               key={stickerId}
-              className={`absolute rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] shadow-[0_8px_18px_rgba(0,0,0,0.14)] ${sticker.className}`}
+              className={`absolute rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-[0.2em] shadow-[0_8px_18px_rgba(0,0,0,0.12)] ${sticker.className}`}
               style={sticker.style}
             >
               {stickerLabels[stickerId] ?? sticker.label}
@@ -184,7 +219,7 @@ export function PhotoStripPreview({
         })}
       </div>
 
-      <div className="mt-3 flex items-center justify-between px-1 text-[10px] uppercase tracking-[0.24em] text-[#8b7c6b]">
+      <div className="mt-3 flex items-center justify-between px-1 text-[9px] uppercase tracking-[0.24em] text-[#9a8281]">
         <span>{t('strip.studioGlow')}</span>
         <span>{t('strip.shotsCount')}</span>
       </div>

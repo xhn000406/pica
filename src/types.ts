@@ -8,6 +8,12 @@ export type FilterId = 'original' | 'mono' | 'sun-kiss' | 'cool-pop'
 
 export type StickerId = 'spark' | 'bestie' | 'date' | 'flash'
 
+export type PolaroidPaperId = 'white' | 'cream' | 'pink' | 'blue' | 'black'
+
+export type PolaroidBackdropId = 'none' | 'pink-grid' | 'blue' | 'cream-paper'
+
+export type PolaroidFrameId = 'white' | 'black' | 'none' | 'soft-white'
+
 export type MockPhoto = {
   id: string
   title: string
