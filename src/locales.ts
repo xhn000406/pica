@@ -18,6 +18,9 @@ export const messages = {
       footerGuardrails:
         '摄像头只在浏览器本地使用；照片不会上传。',
     },
+    flow: {
+      lockedStage: '完成四张拍摄后，这一阶段会自然解锁。',
+    },
     steps: {
       ariaLabel: '拍照亭流程',
       start: { label: '开始', note: '入口' },
@@ -36,6 +39,11 @@ export const messages = {
       previewTitle: '照片条预览',
       previewSubtitle: '柔和相纸预览',
       stageBadge: '4 cuts',
+      petPreviewTitle: '先来一点可爱氛围',
+      petPreviewSubtitle: '把镜头留给今天的你',
+      petPreviewBadge: 'mood board',
+      dogAlt: '粉色背景中的小狗',
+      catAlt: '柔光下的小猫',
       highlightOneTitle: '真实四连拍',
       highlightOneDescription: '支持手机、macOS 与 Windows 浏览器摄像头授权和真实截图。',
       highlightTwoTitle: '柔和成片风格',
@@ -225,6 +233,9 @@ export const messages = {
       footerGuardrails:
         'Camera processing stays on this device and photos are never uploaded.',
     },
+    flow: {
+      lockedStage: 'This stage unlocks naturally after all four photos are captured.',
+    },
     steps: {
       ariaLabel: 'Photo booth flow',
       start: { label: 'Start', note: 'entry' },
@@ -243,6 +254,11 @@ export const messages = {
       previewTitle: 'Strip preview',
       previewSubtitle: 'soft paper preview',
       stageBadge: '4 cuts',
+      petPreviewTitle: 'A little cute energy',
+      petPreviewSubtitle: 'Save the camera for you.',
+      petPreviewBadge: 'mood board',
+      dogAlt: 'A small dog against a pink backdrop',
+      catAlt: 'A cat in soft light',
       highlightOneTitle: 'Real four-shot capture',
       highlightOneDescription: 'Camera permission and real snapshots work on mobile, macOS, and Windows browsers.',
       highlightTwoTitle: 'Style before export',

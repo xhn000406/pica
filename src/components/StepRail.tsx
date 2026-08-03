@@ -3,16 +3,12 @@ import { useI18n } from '../useI18n'
 
 type StepRailProps = {
   currentPage: AppPage
-  onSelect: (page: AppPage) => void
-  isStepEnabled: (page: AppPage) => boolean
 }
 
 const stepIds: AppPage[] = ['start', 'camera', 'edit', 'export']
 
 export function StepRail({
   currentPage,
-  onSelect,
-  isStepEnabled,
 }: StepRailProps) {
   const { t } = useI18n()
 
@@ -23,22 +19,15 @@ export function StepRail({
     >
       {stepIds.map((stepId, index) => {
         const isActive = currentPage === stepId
-        const isEnabled = isStepEnabled(stepId)
-
         return (
-          <button
+          <div
             key={stepId}
-            type="button"
-            onClick={() => isEnabled && onSelect(stepId)}
-            className={`group flex shrink-0 items-center gap-3 rounded-full px-3 py-2 text-left transition duration-300 lg:min-w-0 lg:flex-1 ${
+            className={`flex shrink-0 items-center gap-3 rounded-full px-3 py-2 text-left transition duration-300 lg:min-w-0 lg:flex-1 ${
               isActive
                 ? 'bg-[#161316] text-white shadow-[0_10px_22px_rgba(22,19,22,0.16)]'
-                : isEnabled
-                  ? 'text-[#756467] hover:bg-[#fff3f6]'
-                  : 'cursor-not-allowed text-[#cabdc0]'
+                : 'text-[#9e8b8e]'
             }`}
-            aria-current={isActive ? 'page' : undefined}
-            disabled={!isEnabled}
+            aria-current={isActive ? 'step' : undefined}
           >
             <span
               className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-bold tracking-[0.18em] ${
@@ -59,7 +48,7 @@ export function StepRail({
                 {t(`steps.${stepId}.note`)}
               </span>
             </span>
-          </button>
+          </div>
         )
       })}
     </nav>

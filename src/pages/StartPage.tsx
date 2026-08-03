@@ -1,22 +1,12 @@
-import { ArrowRight, Camera, Sparkles, Wand2 } from 'lucide-react'
+import { ArrowDown, Camera, Sparkles, Wand2 } from 'lucide-react'
 
-import { PhotoStripPreview } from '../components/PhotoStripPreview'
-import type { BorderToneId, FilterId, MockPhoto, StickerId } from '../types'
 import { useI18n } from '../useI18n'
 
 type StartPageProps = {
-  previewPhotos: MockPhoto[]
-  borderTone: BorderToneId
-  filterId: FilterId
-  stickerIds: StickerId[]
   onStart: () => void
 }
 
 export function StartPage({
-  previewPhotos,
-  borderTone,
-  filterId,
-  stickerIds,
   onStart,
 }: StartPageProps) {
   const { locale, t } = useI18n()
@@ -66,7 +56,7 @@ export function StartPage({
               className="inline-flex items-center gap-3 rounded-full bg-[#161316] px-6 py-4 text-base font-semibold text-white shadow-[0_18px_38px_rgba(22,19,22,0.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#2b2529]"
             >
               {t('start.startButton')}
-              <ArrowRight size={18} />
+              <ArrowDown size={18} />
             </button>
             <div className="rounded-full border border-[#ead8d1] bg-white/82 px-5 py-4 text-sm font-semibold text-[#8f7477] shadow-[0_12px_30px_rgba(120,86,68,0.06)]">
               {t('start.metaPill')}
@@ -97,34 +87,30 @@ export function StartPage({
             <div className="mb-5 flex items-center justify-between gap-4">
               <div>
                 <p className="font-heading text-3xl text-[#161316]">
-                  {t('start.previewTitle')}
+                  {t('start.petPreviewTitle')}
                 </p>
-                <p className="mt-1 text-sm text-[#8a7477]">{t('start.previewSubtitle')}</p>
+                <p className="mt-1 text-sm text-[#8a7477]">{t('start.petPreviewSubtitle')}</p>
               </div>
               <div className="rounded-full bg-[#ffe5ed] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#b65d78]">
-                {t('start.stageBadge')}
+                {t('start.petPreviewBadge')}
               </div>
             </div>
 
-            <div className="grid items-center gap-5 sm:grid-cols-[1fr_0.72fr]">
-              <PhotoStripPreview
-                photos={previewPhotos}
-                borderTone={borderTone}
-                filterId={filterId}
-                stickerIds={stickerIds}
-                compact={false}
-              />
-
-              <div className="space-y-3 text-sm text-[#756467]">
-                <div className="rounded-2xl border border-[#f0ded7] bg-[#fffaf7] px-4 py-3">
-                  <p className="font-semibold text-[#161316]">4 cut strip</p>
-                  <p className="mt-1 text-xs leading-5">Soft frame, real camera, local only.</p>
-                </div>
-                <div className="rounded-2xl border border-[#f0ded7] bg-[#fff7fb] px-4 py-3">
-                  <p className="font-semibold text-[#161316]">K-style booth</p>
-                  <p className="mt-1 text-xs leading-5">Clean, cute, made for sharing.</p>
-                </div>
-              </div>
+            <div className="grid items-center gap-5 sm:grid-cols-2">
+              <figure className="overflow-hidden rounded-[26px] border-[10px] border-white bg-[#ffe5ed] shadow-[0_18px_36px_rgba(120,86,68,0.12)]">
+                <img
+                  src="https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&w=800&q=82"
+                  alt={t('start.dogAlt')}
+                  className="aspect-[4/5] h-full w-full object-cover"
+                />
+              </figure>
+              <figure className="translate-y-5 overflow-hidden rounded-[26px] border-[10px] border-white bg-[#dff4ff] shadow-[0_18px_36px_rgba(120,86,68,0.12)] sm:translate-y-8">
+                <img
+                  src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=800&q=82"
+                  alt={t('start.catAlt')}
+                  className="aspect-[4/5] h-full w-full object-cover"
+                />
+              </figure>
             </div>
           </div>
         </section>

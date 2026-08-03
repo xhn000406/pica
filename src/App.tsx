@@ -1,5 +1,5 @@
 import { House } from 'lucide-react'
-import { startTransition, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 
 import { StepRail } from './components/StepRail'
@@ -11,13 +11,11 @@ import { StartPage } from './pages/StartPage'
 import { useI18n } from './useI18n'
 import type {
   AppPage,
-  BorderToneId,
   FilterId,
   MockPhoto,
   PolaroidBackdropId,
   PolaroidFrameId,
   PolaroidPaperId,
-  StickerId,
 } from './types'
 
 const totalShots = 4
@@ -29,25 +27,26 @@ function App() {
   const countdownTimerRef = useRef<number | null>(null)
   const flashTimerRef = useRef<number | null>(null)
   const captureTimerRef = useRef<number | null>(null)
+  const stageRefs = useRef<Record<AppPage, HTMLElement | null>>({
+    start: null,
+    camera: null,
+    edit: null,
+    export: null,
+  })
 
   const [page, setPage] = useState<AppPage>('start')
   const [capturedPhotos, setCapturedPhotos] = useState<MockPhoto[]>([])
   const [countdown, setCountdown] = useState<number | null>(null)
   const [isFlashing, setIsFlashing] = useState(false)
   const [isCaptureLocked, setIsCaptureLocked] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [borderTone] = useState<BorderToneId>('butter')
   const [filterId, setFilterId] = useState<FilterId>('original')
   const [polaroidPaperId, setPolaroidPaperId] = useState<PolaroidPaperId>('white')
   const [polaroidFooterText, setPolaroidFooterText] = useState('')
   const polaroidBackdropId: PolaroidBackdropId = 'none'
   const polaroidFrameId: PolaroidFrameId = 'none'
-  const [stickerIds] = useState<StickerId[]>(['spark', 'date'])
   const [downloadState, setDownloadState] = useState<'idle' | 'success'>('idle')
 
   const mockPhotos = getMockPhotos(locale)
-  const previewPhotos =
-    capturedPhotos.length === totalShots ? capturedPhotos : mockPhotos
   const livePreviewPhoto =
     mockPhotos[capturedPhotos.length % mockPhotos.length]
 
@@ -68,7 +67,7 @@ function App() {
     }, pageRef)
 
     return () => ctx.revert()
-  }, [page])
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -87,57 +86,33 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (!isEditModalOpen) {
-      return
-    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const activeEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0]
+        const activeStage = activeEntry?.target.getAttribute('data-stage') as AppPage | null
+        if (activeStage) setPage(activeStage)
+      },
+      { threshold: [0.35, 0.55, 0.75] },
+    )
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsEditModalOpen(false)
-      }
-    }
+    Object.values(stageRefs.current).forEach((section) => section && observer.observe(section))
+    return () => observer.disconnect()
+  }, [])
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isEditModalOpen])
-
-  const goToPage = (nextPage: AppPage) => {
-    if (nextPage !== 'edit') {
-      setIsEditModalOpen(false)
-    }
-
-    startTransition(() => {
-      setPage(nextPage)
+  const scrollToStage = (nextPage: AppPage) => {
+    setPage(nextPage)
+    window.requestAnimationFrame(() => {
+      stageRefs.current[nextPage]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
   }
 
-  const openEditModal = () => {
+  const continueToEdit = () => {
     if (capturedPhotos.length !== totalShots) {
       return
     }
-
-    setIsEditModalOpen(true)
-  }
-
-  const handleStepSelect = (nextPage: AppPage) => {
-    if (!canVisitPage(nextPage)) {
-      return
-    }
-
-    if (nextPage === 'edit') {
-      openEditModal()
-      return
-    }
-
-    goToPage(nextPage)
-  }
-
-  const canVisitPage = (targetPage: AppPage) => {
-    if (targetPage === 'start' || targetPage === 'camera') {
-      return true
-    }
-
-    return capturedPhotos.length === totalShots
+    scrollToStage('edit')
   }
 
   const clearCaptureTimers = () => {
@@ -163,10 +138,9 @@ function App() {
     setCountdown(null)
     setIsFlashing(false)
     setIsCaptureLocked(false)
-    setIsEditModalOpen(false)
     setDownloadState('idle')
     setPolaroidFooterText('')
-    goToPage(nextPage)
+    scrollToStage(nextPage)
   }
 
   const handleCapture = (captureFrame: () => string | null) => {
@@ -227,53 +201,6 @@ function App() {
     setDownloadState('success')
   }
 
-  let pageContent: React.ReactNode
-
-  switch (page) {
-    case 'camera':
-      pageContent = (
-        <CameraPage
-          capturedPhotos={capturedPhotos}
-          livePreviewPhoto={livePreviewPhoto}
-          filterId={filterId}
-          countdown={countdown}
-          isFlashing={isFlashing}
-          isCaptureLocked={isCaptureLocked}
-          onCapture={handleCapture}
-          onRestart={() => resetSession('camera')}
-          onContinue={openEditModal}
-        />
-      )
-      break
-    case 'export':
-      pageContent = (
-        <ExportPage
-          photos={capturedPhotos}
-          filterId={filterId}
-          paperId={polaroidPaperId}
-          backdropId={polaroidBackdropId}
-          frameId={polaroidFrameId}
-          footerText={polaroidFooterText}
-          downloadState={downloadState}
-          onDownload={handleMockDownload}
-          onRetake={() => resetSession('camera')}
-        />
-      )
-      break
-    case 'start':
-    default:
-      pageContent = (
-        <StartPage
-          previewPhotos={previewPhotos}
-          borderTone={borderTone}
-          filterId={filterId}
-          stickerIds={stickerIds}
-          onStart={() => resetSession('camera')}
-        />
-      )
-      break
-  }
-
   return (
     <div
       ref={shellRef}
@@ -295,11 +222,7 @@ function App() {
                 </div>
               </div>
 
-              <StepRail
-                currentPage={isEditModalOpen ? 'edit' : page}
-                onSelect={handleStepSelect}
-                isStepEnabled={canVisitPage}
-              />
+              <StepRail currentPage={page} />
             </div>
 
             <div className="flex items-center gap-1 self-start rounded-full border border-[#ead8d1] bg-white/82 p-1 shadow-[0_10px_24px_rgba(120,86,68,0.06)] lg:self-auto">
@@ -333,7 +256,56 @@ function App() {
         </header>
 
         <main ref={pageRef} className="flex-1 py-7 lg:py-10">
-          <div className="relative">{pageContent}</div>
+          <div className="relative space-y-20 lg:space-y-28">
+            <section ref={(node) => { stageRefs.current.start = node }} data-stage="start" className="scroll-mt-32">
+              <StartPage onStart={() => resetSession('camera')} />
+            </section>
+            <section ref={(node) => { stageRefs.current.camera = node }} data-stage="camera" className="scroll-mt-32">
+              <CameraPage
+                capturedPhotos={capturedPhotos}
+                livePreviewPhoto={livePreviewPhoto}
+                filterId={filterId}
+                countdown={countdown}
+                isFlashing={isFlashing}
+                isCaptureLocked={isCaptureLocked}
+                onCapture={handleCapture}
+                onRestart={() => resetSession('camera')}
+                onContinue={continueToEdit}
+              />
+            </section>
+            <section ref={(node) => { stageRefs.current.edit = node }} data-stage="edit" className="scroll-mt-32">
+              {capturedPhotos.length === totalShots ? (
+                <EditPage
+                  photos={capturedPhotos}
+                  filterId={filterId}
+                  paperId={polaroidPaperId}
+                  backdropId={polaroidBackdropId}
+                  frameId={polaroidFrameId}
+                  footerText={polaroidFooterText}
+                  onFilterChange={setFilterId}
+                  onPaperChange={setPolaroidPaperId}
+                  onFooterTextChange={setPolaroidFooterText}
+                  onBack={() => scrollToStage('camera')}
+                  onContinue={() => scrollToStage('export')}
+                />
+              ) : <StageGate index="03" title={t('edit.polaroidTitle')} description={t('flow.lockedStage')} />}
+            </section>
+            <section ref={(node) => { stageRefs.current.export = node }} data-stage="export" className="scroll-mt-32">
+              {capturedPhotos.length === totalShots ? (
+                <ExportPage
+                  photos={capturedPhotos}
+                  filterId={filterId}
+                  paperId={polaroidPaperId}
+                  backdropId={polaroidBackdropId}
+                  frameId={polaroidFrameId}
+                  footerText={polaroidFooterText}
+                  downloadState={downloadState}
+                  onDownload={handleMockDownload}
+                  onRetake={() => resetSession('camera')}
+                />
+              ) : <StageGate index="04" title={t('export.title')} description={t('flow.lockedStage')} />}
+            </section>
+          </div>
         </main>
 
         <footer className="pb-8 pt-2">
@@ -343,34 +315,18 @@ function App() {
         </footer>
       </div>
 
-      {isEditModalOpen ? (
-        <div
-          className="fixed inset-0 z-40 overflow-y-auto bg-[#161316]/28 px-4 py-6 backdrop-blur-md sm:py-8"
-          role="dialog"
-          aria-modal="true"
-          aria-label={t('edit.polaroidTitle')}
-          onClick={() => setIsEditModalOpen(false)}
-        >
-          <div onClick={(event) => event.stopPropagation()}>
-            <EditPage
-              photos={capturedPhotos}
-              filterId={filterId}
-              paperId={polaroidPaperId}
-              backdropId={polaroidBackdropId}
-              frameId={polaroidFrameId}
-              footerText={polaroidFooterText}
-              onFilterChange={setFilterId}
-              onPaperChange={setPolaroidPaperId}
-              onFooterTextChange={setPolaroidFooterText}
-              onBack={() => setIsEditModalOpen(false)}
-              onContinue={() => {
-                setIsEditModalOpen(false)
-                goToPage('export')
-              }}
-            />
-          </div>
-        </div>
-      ) : null}
+    </div>
+  )
+}
+
+function StageGate({ index, title, description }: { index: string; title: string; description: string }) {
+  return (
+    <div className="grid min-h-[360px] place-items-center rounded-[34px] border border-dashed border-[#ead8d1] bg-white/54 p-8 text-center">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#c07b91]">{index}</p>
+        <h2 className="mt-3 font-heading text-4xl text-[#161316]">{title}</h2>
+        <p className="mt-3 text-sm leading-7 text-[#8a7477]">{description}</p>
+      </div>
     </div>
   )
 }
