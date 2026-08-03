@@ -11,14 +11,16 @@ import {
 import { useEffect, useState } from 'react'
 
 import { LayoutPicker } from '../components/LayoutPicker'
+import { CameraFilterDial } from '../components/CameraFilterDial'
 import { PolaroidPreview } from '../components/PolaroidPreview'
+import { getCameraFilter } from '../data/cameraFilters'
 import { getStripLayout } from '../data/layouts'
 import {
   detectCameraPlatform,
   useCamera,
   type CameraStatus,
 } from '../hooks/useCamera'
-import type { FilterId, LayoutId, MockPhoto } from '../types'
+import type { CameraFilterId, FilterId, LayoutId, MockPhoto } from '../types'
 import { useI18n } from '../useI18n'
 
 type CameraPageProps = {
@@ -26,10 +28,12 @@ type CameraPageProps = {
   capturedPhotos: MockPhoto[]
   livePreviewPhoto: MockPhoto
   filterId: FilterId
+  cameraFilterId: CameraFilterId
   countdown: number | null
   isFlashing: boolean
   isCaptureLocked: boolean
   onLayoutChange: (layoutId: LayoutId) => void
+  onCameraFilterChange: (filterId: CameraFilterId) => void
   onCapture: (captureFrame: () => string | null) => void
   onRestart: () => void
   onContinue: () => void
@@ -55,10 +59,12 @@ export function CameraPage({
   capturedPhotos,
   livePreviewPhoto,
   filterId,
+  cameraFilterId,
   countdown,
   isFlashing,
   isCaptureLocked,
   onLayoutChange,
+  onCameraFilterChange,
   onCapture,
   onRestart,
   onContinue,
@@ -85,6 +91,7 @@ export function CameraPage({
   const platform = detectCameraPlatform()
   const isCameraReady = status === 'ready'
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const cameraFilter = getCameraFilter(cameraFilterId)
 
   useEffect(() => {
     if (!isPreviewOpen) {
@@ -149,10 +156,12 @@ export function CameraPage({
               muted
               playsInline
               aria-label={t('camera.livePreview')}
-              className={`h-full w-full object-cover transition-opacity ${
+              className={`h-full w-full object-cover transition-[filter,opacity] duration-300 ${
                 facingMode === 'user' ? '-scale-x-100' : ''
               } ${isCameraReady ? 'opacity-100' : 'opacity-0'}`}
+              style={{ filter: cameraFilter.liveFilter }}
             />
+            <div className={`pointer-events-none absolute inset-0 ${cameraFilter.overlayClass}`} />
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),transparent_42%,rgba(255,255,255,0.06))]" />
 
             <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-3 px-4 py-4 text-white sm:px-5">
@@ -250,10 +259,31 @@ export function CameraPage({
           </div>
         </div>
 
+        <div className="rounded-[24px] border border-[#ead8d1] bg-white/72 p-3 shadow-[0_14px_32px_rgba(120,86,68,0.06)] sm:p-4">
+          <div className="mb-3 flex items-center justify-between gap-3 px-1">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#c07b91]">
+                {t('camera.lensLooks')}
+              </p>
+              <p className="mt-1 text-xs text-[#8a7477]">
+                {hasCaptures ? t('camera.lensLocked') : t('camera.lensHint')}
+              </p>
+            </div>
+            <span className="rounded-full bg-[#fff0f5] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#b65d78]">
+              {cameraFilter.label}
+            </span>
+          </div>
+          <CameraFilterDial
+            value={cameraFilterId}
+            disabled={hasCaptures || isCaptureLocked}
+            onChange={onCameraFilterChange}
+          />
+        </div>
+
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
-            onClick={() => onCapture(captureFrame)}
+            onClick={() => onCapture(() => captureFrame(cameraFilterId))}
             disabled={!isCameraReady || isCaptureLocked || isSessionComplete}
             className="inline-flex items-center gap-3 rounded-full bg-[#161316] px-6 py-4 text-sm font-semibold text-white shadow-[0_18px_38px_rgba(22,19,22,0.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#2b2529] disabled:cursor-not-allowed disabled:bg-[#d3c6c9]"
           >

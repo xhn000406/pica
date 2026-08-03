@@ -1,8 +1,6 @@
-import { House } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 
-import { StepRail } from './components/StepRail'
 import { defaultLayoutId, getStripLayout } from './data/layouts'
 import { getMockPhotos } from './data/mockPhotos'
 import { CameraPage } from './pages/CameraPage'
@@ -12,6 +10,7 @@ import { StartPage } from './pages/StartPage'
 import { useI18n } from './useI18n'
 import type {
   AppPage,
+  CameraFilterId,
   FilterId,
   LayoutId,
   MockPhoto,
@@ -21,7 +20,7 @@ import type {
 } from './types'
 
 function App() {
-  const { locale, setLocale, t } = useI18n()
+  const { locale, t } = useI18n()
   const shellRef = useRef<HTMLDivElement | null>(null)
   const pageRef = useRef<HTMLDivElement | null>(null)
   const countdownTimerRef = useRef<number | null>(null)
@@ -34,13 +33,13 @@ function App() {
     export: null,
   })
 
-  const [page, setPage] = useState<AppPage>('start')
   const [layoutId, setLayoutId] = useState<LayoutId>(defaultLayoutId)
   const [capturedPhotos, setCapturedPhotos] = useState<MockPhoto[]>([])
   const [countdown, setCountdown] = useState<number | null>(null)
   const [isFlashing, setIsFlashing] = useState(false)
   const [isCaptureLocked, setIsCaptureLocked] = useState(false)
   const [filterId, setFilterId] = useState<FilterId>('original')
+  const [cameraFilterId, setCameraFilterId] = useState<CameraFilterId>('original')
   const [polaroidPaperId, setPolaroidPaperId] = useState<PolaroidPaperId>('white')
   const [polaroidFooterText, setPolaroidFooterText] = useState('')
   const polaroidBackdropId: PolaroidBackdropId = 'none'
@@ -88,24 +87,7 @@ function App() {
     }
   }, [])
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const activeEntry = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0]
-        const activeStage = activeEntry?.target.getAttribute('data-stage') as AppPage | null
-        if (activeStage) setPage(activeStage)
-      },
-      { threshold: [0.35, 0.55, 0.75] },
-    )
-
-    Object.values(stageRefs.current).forEach((section) => section && observer.observe(section))
-    return () => observer.disconnect()
-  }, [])
-
   const scrollToStage = (nextPage: AppPage) => {
-    setPage(nextPage)
     window.requestAnimationFrame(() => {
       stageRefs.current[nextPage]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
@@ -142,6 +124,7 @@ function App() {
     setIsFlashing(false)
     setIsCaptureLocked(false)
     setDownloadState('idle')
+    setCameraFilterId('original')
     setPolaroidFooterText('')
     scrollToStage(nextPage)
   }
@@ -217,55 +200,7 @@ function App() {
       className="min-h-screen bg-[#fffaf7] text-[#161316] selection:bg-[#ffdce7]"
     >
       <div className="mx-auto flex min-h-screen w-full max-w-[1320px] flex-col px-4 sm:px-6 lg:px-8">
-        <header className="sticky top-0 z-20 bg-[#fffaf7]/92 backdrop-blur-xl">
-          <div className="flex flex-col gap-4 border-b border-[#f0ded7] py-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#ead8d1] bg-white text-[#161316] shadow-[0_10px_24px_rgba(120,86,68,0.08)]">
-                  <House size={20} />
-                </div>
-                <div className="hidden leading-none sm:block">
-                  <p className="font-heading text-xl text-[#161316]">Pica Booth</p>
-                  <p className="mt-1 text-[10px] uppercase tracking-[0.28em] text-[#a77f85]">
-                    self studio
-                  </p>
-                </div>
-              </div>
-
-              <StepRail currentPage={page} />
-            </div>
-
-            <div className="flex items-center gap-1 self-start rounded-full border border-[#ead8d1] bg-white/82 p-1 shadow-[0_10px_24px_rgba(120,86,68,0.06)] lg:self-auto">
-              <span className="px-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#9b7a7f]">
-                {t('common.languageSwitch')}
-              </span>
-              <button
-                type="button"
-                onClick={() => setLocale('zh-CN')}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  locale === 'zh-CN'
-                    ? 'bg-[#161316] text-white'
-                    : 'text-[#6f6264] hover:bg-[#fff2f5]'
-                }`}
-              >
-                {t('common.chinese')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setLocale('en-US')}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  locale === 'en-US'
-                    ? 'bg-[#161316] text-white'
-                    : 'text-[#6f6264] hover:bg-[#fff2f5]'
-                }`}
-              >
-                {t('common.english')}
-              </button>
-            </div>
-          </div>
-        </header>
-
-        <main ref={pageRef} className="flex-1 py-7 lg:py-10">
+        <main ref={pageRef} className="flex-1 pb-7 lg:pb-10">
           <div className="relative space-y-20 lg:space-y-28">
             <section ref={(node) => { stageRefs.current.start = node }} data-stage="start" className="scroll-mt-32">
               <StartPage onStart={() => resetSession('camera')} />
@@ -276,10 +211,12 @@ function App() {
                 capturedPhotos={capturedPhotos}
                 livePreviewPhoto={livePreviewPhoto}
                 filterId={filterId}
+                cameraFilterId={cameraFilterId}
                 countdown={countdown}
                 isFlashing={isFlashing}
                 isCaptureLocked={isCaptureLocked}
                 onLayoutChange={handleLayoutChange}
+                onCameraFilterChange={setCameraFilterId}
                 onCapture={handleCapture}
                 onRestart={() => resetSession('camera')}
                 onContinue={continueToEdit}

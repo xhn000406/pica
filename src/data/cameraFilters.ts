@@ -6,6 +6,7 @@ export type CameraFilterPreset = {
   shortLabel: string
   swatch: string
   liveFilter: string
+  captureFilter: string
   overlayClass: string
   canvas: {
     saturation: number
@@ -34,6 +35,7 @@ export const cameraFilters: Record<CameraFilterId, CameraFilterPreset> = {
     shortLabel: 'ORIG',
     swatch: 'linear-gradient(135deg, #ffffff, #dfe5ee)',
     liveFilter: 'none',
+    captureFilter: 'none',
     overlayClass: 'bg-transparent',
     canvas: {
       saturation: 1,
@@ -52,6 +54,7 @@ export const cameraFilters: Record<CameraFilterId, CameraFilterPreset> = {
     shortLabel: 'CCD',
     swatch: 'linear-gradient(135deg, #a6f0ff, #317ca8)',
     liveFilter: 'saturate(1.26) contrast(1.12) brightness(1.04) hue-rotate(164deg)',
+    captureFilter: 'saturate(1.26) contrast(1.12) brightness(1.04) hue-rotate(164deg)',
     overlayClass: 'bg-[#65d9ff]/18 mix-blend-color',
     canvas: {
       saturation: 1.26,
@@ -70,6 +73,7 @@ export const cameraFilters: Record<CameraFilterId, CameraFilterPreset> = {
     shortLabel: '2000',
     swatch: 'linear-gradient(135deg, #ffe0a8, #e9776c)',
     liveFilter: 'sepia(0.22) saturate(1.34) contrast(1.1) brightness(1.08)',
+    captureFilter: 'sepia(0.22) saturate(1.34) contrast(1.1) brightness(1.08)',
     overlayClass: 'bg-[#ffbd72]/16 mix-blend-soft-light',
     canvas: {
       saturation: 1.34,
@@ -88,6 +92,7 @@ export const cameraFilters: Record<CameraFilterId, CameraFilterPreset> = {
     shortLabel: '35MM',
     swatch: 'linear-gradient(135deg, #e3bd7b, #9b6956)',
     liveFilter: 'sepia(0.34) saturate(0.84) contrast(0.9) brightness(1.08)',
+    captureFilter: 'sepia(0.34) saturate(0.84) contrast(0.9) brightness(1.08)',
     overlayClass: 'bg-[#f6c784]/12 mix-blend-screen',
     canvas: {
       saturation: 0.84,
@@ -106,6 +111,7 @@ export const cameraFilters: Record<CameraFilterId, CameraFilterPreset> = {
     shortLabel: 'NIGHT',
     swatch: 'linear-gradient(135deg, #637a9c, #151b31)',
     liveFilter: 'saturate(0.88) contrast(1.34) brightness(0.82) hue-rotate(184deg)',
+    captureFilter: 'saturate(0.88) contrast(1.34) brightness(0.82) hue-rotate(184deg)',
     overlayClass: 'bg-[#314a98]/22 mix-blend-color',
     canvas: {
       saturation: 0.88,

@@ -227,7 +227,7 @@ export function useCamera(photoAspectRatio = defaultPhotoAspectRatio) {
     }
 
     const cameraFilter = getCameraFilter(cameraFilterId)
-    context.filter = `saturate(${cameraFilter.canvas.saturation}) contrast(${cameraFilter.canvas.contrast}) brightness(${cameraFilter.canvas.brightness})`
+    context.filter = cameraFilter.captureFilter
     context.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height)
     context.filter = 'none'
     renderCameraFilter(context, width, height, cameraFilter)
