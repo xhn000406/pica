@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { PolaroidPreview } from '../components/PolaroidPreview'
 import type {
   FilterId,
+  LayoutId,
   MockPhoto,
   PolaroidBackdropId,
   PolaroidFrameId,
@@ -13,6 +14,7 @@ import { useI18n } from '../useI18n'
 
 type EditPageProps = {
   photos: MockPhoto[]
+  layoutId: LayoutId
   filterId: FilterId
   paperId: PolaroidPaperId
   backdropId: PolaroidBackdropId
@@ -35,6 +37,7 @@ const paperSwatches: Record<PolaroidPaperId, string> = {
 
 export function EditPage({
   photos,
+  layoutId,
   filterId,
   paperId,
   backdropId,
@@ -102,6 +105,7 @@ export function EditPage({
               paperId={paperId}
               backdropId={backdropId}
               frameId={frameId}
+              layoutId={layoutId}
               footerText={footerText}
               compact
             />

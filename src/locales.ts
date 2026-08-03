@@ -19,7 +19,20 @@ export const messages = {
         '摄像头只在浏览器本地使用；照片不会上传。',
     },
     flow: {
-      lockedStage: '完成四张拍摄后，这一阶段会自然解锁。',
+      lockedStage: '拍满当前布局所需张数后，这一阶段会自然解锁。',
+    },
+    layout: {
+      pageLabel: '布局',
+      title: '选择拍立得布局',
+      description: '先选好版式，再开始连拍。张数与成片排列会跟所选布局一致。',
+      lockedHint: '已开始拍摄后暂不可换布局，可点「重新开始」再切换。',
+      options: {
+        a: { name: '布局 A', poses: '{{count}} Pose' },
+        b: { name: '布局 B', poses: '{{count}} Pose' },
+        c: { name: '布局 C', poses: '{{count}} Pose' },
+        d: { name: '布局 D', poses: '{{count}} Pose' },
+        traditional: { name: '经典拍立得', poses: '{{count}} Pose Vertical' },
+      },
     },
     steps: {
       ariaLabel: '拍照亭流程',
@@ -29,12 +42,12 @@ export const messages = {
       export: { label: '导出', note: '保存成品' },
     },
     start: {
-      badge: 'K-style self photo booth',
+      badge: 'SELF PHOTO BOOTH',
       eyebrow: 'clean . soft . shareable',
-      title: '打开摄像头，拍一条会让人想保存的照片条。',
+      title: 'Pica Booth',
       description:
-        '这是一个真正能进入拍摄流程的网页拍照亭：授权摄像头后完成四连拍，调整 photo strip 风格，并预览导出结果。照片只保留在当前浏览器页面中。',
-      startButton: '开始体验',
+        '在家也能拍一条韩系拍立得。选布局、连拍、调风格，成片只留在你的浏览器里。',
+      startButton: 'START',
       metaPill: '真实摄像头 . 手机与桌面适配 . 本地处理',
       previewTitle: '照片条预览',
       previewSubtitle: '柔和相纸预览',
@@ -53,8 +66,8 @@ export const messages = {
     },
     camera: {
       pageLabel: '拍摄页',
-      title: '授权摄像头，开始一组真实四连拍。',
-      shotCount: '{{count}} / 4 张',
+      title: '授权摄像头，开始一组真实连拍。',
+      shotCount: '{{count}} / {{total}} 张',
       cameraFeed: '等待摄像头',
       liveFeed: '实时摄像头',
       livePreview: '实时摄像头预览',
@@ -64,7 +77,7 @@ export const messages = {
       boothMode: '拍照状态',
       captureIn: '{{count}} 秒后拍摄',
       readyToSnap: '准备拍摄',
-      allShotsCaptured: '四张已拍完',
+      allShotsCaptured: '本组已拍完',
       takePhoto: '拍一张',
       capturedTitle: '照片 {{count}}',
       capturedCaption: '真实摄像头拍摄',
@@ -103,9 +116,9 @@ export const messages = {
       title: '在导出前把照片条风格调顺。',
       polaroidTitle: '编辑这张拍立得。',
       polaroidDescription:
-        '四张照片会组成一张竖向拍立得照片条，你可以调整滤镜、相纸颜色、底板和边框。',
+        '照片会按所选布局组成拍立得成片，你可以调整滤镜与相纸颜色。',
       description:
-        '选择一套柔和的边框、滤镜和贴纸，让四连拍更像一条可以分享的自拍馆成片。',
+        '选择一套柔和的滤镜和相纸，让连拍更像一条可以分享的自拍馆成片。',
       borderColorsTitle: '边框颜色',
       borderColorsNote: '照片条外壳色',
       borderPreset: '边框预设',
@@ -193,7 +206,7 @@ export const messages = {
     },
     polaroid: {
       title: 'Pica Booth',
-      subtitle: 'one soft polaroid . four cuts',
+      subtitle: 'one soft polaroid',
       date: 'today',
       openSlot: '空位',
     },
@@ -204,7 +217,7 @@ export const messages = {
       openSlot: '空位',
       waitingShot: '等待拍摄',
       studioGlow: '棚拍氛围',
-      shotsCount: '4 连拍',
+      shotsCount: '连拍成片',
       stickerSpark: '闪闪',
       stickerBestie: '好友',
       stickerFlash: '闪光',
@@ -234,7 +247,21 @@ export const messages = {
         'Camera processing stays on this device and photos are never uploaded.',
     },
     flow: {
-      lockedStage: 'This stage unlocks naturally after all four photos are captured.',
+      lockedStage: 'This stage unlocks after you fill every slot for the selected layout.',
+    },
+    layout: {
+      pageLabel: 'Layout',
+      title: 'Choose your layout',
+      description:
+        'Pick a layout before you start. Shot count and final strip arrangement follow the layout you choose.',
+      lockedHint: 'Layout is locked after the first shot. Restart to switch.',
+      options: {
+        a: { name: 'Layout A', poses: '{{count}} Pose' },
+        b: { name: 'Layout B', poses: '{{count}} Pose' },
+        c: { name: 'Layout C', poses: '{{count}} Pose' },
+        d: { name: 'Layout D', poses: '{{count}} Pose' },
+        traditional: { name: 'Traditional Photobooth', poses: '{{count}} Pose Vertical' },
+      },
     },
     steps: {
       ariaLabel: 'Photo booth flow',
@@ -244,12 +271,12 @@ export const messages = {
       export: { label: 'Export', note: 'save strip' },
     },
     start: {
-      badge: 'K-style self photo booth',
+      badge: 'SELF PHOTO BOOTH',
       eyebrow: 'clean . soft . shareable',
-      title: 'Open your camera and make a photo strip worth keeping.',
+      title: 'Pica Booth',
       description:
-        'This is a working browser photo booth: allow camera access, take four real shots, style the photo strip, and preview the export. Photos stay in the current browser session.',
-      startButton: 'Start booth',
+        'Your personal photo booth at home. Choose a layout, shoot a strip, add soft filters, and keep everything local in your browser.',
+      startButton: 'START',
       metaPill: 'real camera . mobile and desktop . local processing',
       previewTitle: 'Strip preview',
       previewSubtitle: 'soft paper preview',
@@ -268,8 +295,8 @@ export const messages = {
     },
     camera: {
       pageLabel: 'Camera page',
-      title: 'Allow camera access and start a real four-shot session.',
-      shotCount: '{{count}} / 4 shots',
+      title: 'Allow camera access and start a real multi-shot session.',
+      shotCount: '{{count}} / {{total}} shots',
       cameraFeed: 'camera waiting',
       liveFeed: 'live camera',
       livePreview: 'Live camera preview',
@@ -319,9 +346,9 @@ export const messages = {
       title: 'Style the strip before export.',
       polaroidTitle: 'Edit this polaroid.',
       polaroidDescription:
-        'Your four shots become one vertical polaroid strip. Tune the filter, paper, backdrop, and frame.',
+        'Your shots become one polaroid layout. Tune the filter and paper color.',
       description:
-        'Choose a soft border, filter, and stickers so the four cuts feel ready to share.',
+        'Choose a soft filter and paper so the strip feels ready to share.',
       borderColorsTitle: 'Border colors',
       borderColorsNote: 'strip shell tones',
       borderPreset: 'border preset',
@@ -409,7 +436,7 @@ export const messages = {
     },
     polaroid: {
       title: 'Pica Booth',
-      subtitle: 'one soft polaroid . four cuts',
+      subtitle: 'one soft polaroid',
       date: 'today',
       openSlot: 'slot',
     },
@@ -420,7 +447,7 @@ export const messages = {
       openSlot: 'Open slot',
       waitingShot: 'waiting for shot',
       studioGlow: 'studio glow',
-      shotsCount: '4 shots',
+      shotsCount: 'photo strip',
       stickerSpark: 'spark',
       stickerBestie: 'bestie',
       stickerFlash: 'flash',

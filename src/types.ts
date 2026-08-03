@@ -2,6 +2,19 @@ export type AppLocale = 'zh-CN' | 'en-US'
 
 export type AppPage = 'start' | 'camera' | 'edit' | 'export'
 
+export type LayoutId = 'a' | 'b' | 'c' | 'd' | 'traditional'
+
+export type LayoutArrangement = 'vertical' | 'grid-2x2'
+
+export type StripLayout = {
+  id: LayoutId
+  shotCount: number
+  arrangement: LayoutArrangement
+  /** Capture & cell width / height */
+  photoAspect: number
+  previewMaxWidth: number
+}
+
 export type BorderToneId = 'butter' | 'blush' | 'mint' | 'midnight'
 
 export type FilterId = 'original' | 'mono' | 'sun-kiss' | 'cool-pop'

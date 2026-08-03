@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 
 import { StepRail } from './components/StepRail'
+import { defaultLayoutId, getStripLayout } from './data/layouts'
 import { getMockPhotos } from './data/mockPhotos'
 import { CameraPage } from './pages/CameraPage'
 import { EditPage } from './pages/EditPage'
@@ -12,13 +13,12 @@ import { useI18n } from './useI18n'
 import type {
   AppPage,
   FilterId,
+  LayoutId,
   MockPhoto,
   PolaroidBackdropId,
   PolaroidFrameId,
   PolaroidPaperId,
 } from './types'
-
-const totalShots = 4
 
 function App() {
   const { locale, setLocale, t } = useI18n()
@@ -35,6 +35,7 @@ function App() {
   })
 
   const [page, setPage] = useState<AppPage>('start')
+  const [layoutId, setLayoutId] = useState<LayoutId>(defaultLayoutId)
   const [capturedPhotos, setCapturedPhotos] = useState<MockPhoto[]>([])
   const [countdown, setCountdown] = useState<number | null>(null)
   const [isFlashing, setIsFlashing] = useState(false)
@@ -46,6 +47,8 @@ function App() {
   const polaroidFrameId: PolaroidFrameId = 'none'
   const [downloadState, setDownloadState] = useState<'idle' | 'success'>('idle')
 
+  const layout = getStripLayout(layoutId)
+  const totalShots = layout.shotCount
   const mockPhotos = getMockPhotos(locale)
   const livePreviewPhoto =
     mockPhotos[capturedPhotos.length % mockPhotos.length]
@@ -141,6 +144,13 @@ function App() {
     setDownloadState('idle')
     setPolaroidFooterText('')
     scrollToStage(nextPage)
+  }
+
+  const handleLayoutChange = (nextLayoutId: LayoutId) => {
+    if (capturedPhotos.length > 0 || isCaptureLocked) {
+      return
+    }
+    setLayoutId(nextLayoutId)
   }
 
   const handleCapture = (captureFrame: () => string | null) => {
@@ -262,12 +272,14 @@ function App() {
             </section>
             <section ref={(node) => { stageRefs.current.camera = node }} data-stage="camera" className="scroll-mt-32">
               <CameraPage
+                layoutId={layoutId}
                 capturedPhotos={capturedPhotos}
                 livePreviewPhoto={livePreviewPhoto}
                 filterId={filterId}
                 countdown={countdown}
                 isFlashing={isFlashing}
                 isCaptureLocked={isCaptureLocked}
+                onLayoutChange={handleLayoutChange}
                 onCapture={handleCapture}
                 onRestart={() => resetSession('camera')}
                 onContinue={continueToEdit}
@@ -277,6 +289,7 @@ function App() {
               {capturedPhotos.length === totalShots ? (
                 <EditPage
                   photos={capturedPhotos}
+                  layoutId={layoutId}
                   filterId={filterId}
                   paperId={polaroidPaperId}
                   backdropId={polaroidBackdropId}
@@ -294,6 +307,7 @@ function App() {
               {capturedPhotos.length === totalShots ? (
                 <ExportPage
                   photos={capturedPhotos}
+                  layoutId={layoutId}
                   filterId={filterId}
                   paperId={polaroidPaperId}
                   backdropId={polaroidBackdropId}

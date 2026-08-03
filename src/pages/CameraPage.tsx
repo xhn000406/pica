@@ -10,22 +10,26 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
+import { LayoutPicker } from '../components/LayoutPicker'
 import { PolaroidPreview } from '../components/PolaroidPreview'
+import { getStripLayout } from '../data/layouts'
 import {
   detectCameraPlatform,
   useCamera,
   type CameraStatus,
 } from '../hooks/useCamera'
-import type { FilterId, MockPhoto } from '../types'
+import type { FilterId, LayoutId, MockPhoto } from '../types'
 import { useI18n } from '../useI18n'
 
 type CameraPageProps = {
+  layoutId: LayoutId
   capturedPhotos: MockPhoto[]
   livePreviewPhoto: MockPhoto
   filterId: FilterId
   countdown: number | null
   isFlashing: boolean
   isCaptureLocked: boolean
+  onLayoutChange: (layoutId: LayoutId) => void
   onCapture: (captureFrame: () => string | null) => void
   onRestart: () => void
   onContinue: () => void
@@ -39,18 +43,28 @@ const cameraErrorMessageKeys: Partial<Record<CameraStatus, string>> = {
   error: 'camera.cameraError',
 }
 
+function viewfinderAspectClass(photoAspect: number) {
+  if (Math.abs(photoAspect - 1) < 0.02) return 'aspect-square'
+  if (Math.abs(photoAspect - 4 / 3) < 0.02) return 'aspect-[4/3]'
+  if (Math.abs(photoAspect - 3 / 4) < 0.02) return 'aspect-[3/4]'
+  return 'aspect-[4/4.65]'
+}
+
 export function CameraPage({
+  layoutId,
   capturedPhotos,
   livePreviewPhoto,
   filterId,
   countdown,
   isFlashing,
   isCaptureLocked,
+  onLayoutChange,
   onCapture,
   onRestart,
   onContinue,
 }: CameraPageProps) {
   const { t } = useI18n()
+  const layout = getStripLayout(layoutId)
   const {
     videoRef,
     status,
@@ -60,9 +74,11 @@ export function CameraPage({
     startCamera,
     switchCamera,
     captureFrame,
-  } = useCamera()
+  } = useCamera(layout.photoAspect)
   const shotCount = capturedPhotos.length
-  const isSessionComplete = shotCount === 4
+  const totalShots = layout.shotCount
+  const isSessionComplete = shotCount === totalShots
+  const hasCaptures = shotCount > 0
   const displayStatus =
     status === 'idle' && permissionState === 'denied' ? 'denied' : status
   const errorMessageKey = cameraErrorMessageKeys[displayStatus]
@@ -86,6 +102,18 @@ export function CameraPage({
   }, [isPreviewOpen])
 
   return (
+    <div className="space-y-8">
+      <div data-reveal>
+        <LayoutPicker
+          selectedId={layoutId}
+          disabled={hasCaptures || isCaptureLocked}
+          onSelect={onLayoutChange}
+        />
+        {hasCaptures ? (
+          <p className="mt-3 text-sm text-[#8a7477]">{t('layout.lockedHint')}</p>
+        ) : null}
+      </div>
+
     <div className="grid gap-8 xl:grid-cols-[minmax(0,1.08fr)_minmax(300px,360px)] xl:gap-12">
       <section data-reveal className="mx-auto w-full max-w-[860px] space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -99,12 +127,14 @@ export function CameraPage({
           </div>
 
           <div className="rounded-full border border-[#ead8d1] bg-white/82 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#8f7477] shadow-[0_10px_24px_rgba(120,86,68,0.06)]">
-            {t('camera.shotCount', { count: shotCount })}
+            {t('camera.shotCount', { count: shotCount, total: totalShots })}
           </div>
         </div>
 
         <div className="mx-auto max-w-[620px] rounded-[30px] border border-[#ead8d1] bg-white/78 p-3 shadow-[0_28px_70px_rgba(120,86,68,0.12)] sm:p-4">
-          <div className="relative mx-auto w-full max-w-[584px] aspect-[4/4.65] overflow-hidden rounded-[24px] bg-[radial-gradient(circle_at_top,_#fff5f8_0%,_#ffdce7_34%,_#b9dff0_100%)]">
+          <div
+            className={`relative mx-auto w-full max-w-[584px] overflow-hidden rounded-[24px] bg-[radial-gradient(circle_at_top,_#fff5f8_0%,_#ffdce7_34%,_#b9dff0_100%)] ${viewfinderAspectClass(layout.photoAspect)}`}
+          >
             <img
               src={livePreviewPhoto.src}
               alt=""
@@ -249,7 +279,7 @@ export function CameraPage({
             {t('camera.continueToEdit')}
           </button>
           <div className="ml-auto flex gap-2">
-            {Array.from({ length: 4 }, (_, index) => (
+            {Array.from({ length: totalShots }, (_, index) => (
               <span
                 key={index}
                 className={`h-2.5 w-2.5 rounded-full transition ${
@@ -279,16 +309,16 @@ export function CameraPage({
             </button>
           </div>
 
-          <div className="mx-auto h-[820px] w-[188px] overflow-visible">
-            <div className="w-[268px] origin-top-left scale-[0.7]">
-              <PolaroidPreview
-                photos={capturedPhotos}
-                filterId={filterId}
-                paperId="white"
-                backdropId="none"
-                frameId="none"
-              />
-            </div>
+          <div className="mx-auto flex w-full justify-center">
+            <PolaroidPreview
+              photos={capturedPhotos}
+              filterId={filterId}
+              paperId="white"
+              backdropId="none"
+              frameId="none"
+              layoutId={layoutId}
+              compact
+            />
           </div>
         </div>
 
@@ -334,10 +364,12 @@ export function CameraPage({
               paperId="white"
               backdropId="none"
               frameId="none"
+              layoutId={layoutId}
             />
           </div>
         </div>
       ) : null}
+    </div>
     </div>
   )
 }

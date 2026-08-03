@@ -6,6 +6,7 @@ import { PolaroidPreview } from '../components/PolaroidPreview'
 import { createPolaroidPng } from '../lib/exportPolaroid'
 import type {
   FilterId,
+  LayoutId,
   MockPhoto,
   PolaroidBackdropId,
   PolaroidFrameId,
@@ -15,6 +16,7 @@ import { useI18n } from '../useI18n'
 
 type ExportPageProps = {
   photos: MockPhoto[]
+  layoutId: LayoutId
   filterId: FilterId
   paperId: PolaroidPaperId
   backdropId: PolaroidBackdropId
@@ -27,6 +29,7 @@ type ExportPageProps = {
 
 export function ExportPage({
   photos,
+  layoutId,
   filterId,
   paperId,
   backdropId,
@@ -54,6 +57,7 @@ export function ExportPage({
         backdropId,
         frameId,
         footerText,
+        layoutId,
       })
       const file = new File([blob], 'pica-booth-photo-strip.png', { type: 'image/png' })
       const prefersShare = window.matchMedia('(pointer: coarse)').matches
@@ -122,6 +126,7 @@ export function ExportPage({
             paperId={paperId}
             backdropId={backdropId}
             frameId={frameId}
+            layoutId={layoutId}
             footerText={footerText}
           />
         </div>

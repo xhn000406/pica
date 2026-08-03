@@ -2,11 +2,13 @@ import type { RefObject } from 'react'
 
 import type {
   FilterId,
+  LayoutId,
   MockPhoto,
   PolaroidBackdropId,
   PolaroidFrameId,
   PolaroidPaperId,
 } from '../types'
+import { getStripLayout } from '../data/layouts'
 import { useI18n } from '../useI18n'
 
 type PolaroidPreviewProps = {
@@ -15,6 +17,7 @@ type PolaroidPreviewProps = {
   paperId: PolaroidPaperId
   backdropId: PolaroidBackdropId
   frameId: PolaroidFrameId
+  layoutId?: LayoutId
   footerText?: string
   compact?: boolean
   exportRef?: RefObject<HTMLDivElement | null>
@@ -97,26 +100,46 @@ const frameStyles: Record<
   },
 }
 
+function aspectClass(photoAspect: number, compact: boolean) {
+  if (Math.abs(photoAspect - 1) < 0.02) {
+    return 'aspect-square'
+  }
+  if (Math.abs(photoAspect - 4 / 3) < 0.02) {
+    return 'aspect-[4/3]'
+  }
+  if (Math.abs(photoAspect - 3 / 4) < 0.02) {
+    return compact ? 'aspect-[3/4]' : 'aspect-[3/4]'
+  }
+  return compact ? 'aspect-[4/4.85]' : 'aspect-[4/4.65]'
+}
+
 export function PolaroidPreview({
   photos,
   filterId,
   paperId,
   backdropId,
   frameId,
+  layoutId = 'a',
   footerText = '',
   compact = false,
   exportRef,
 }: PolaroidPreviewProps) {
   const { t } = useI18n()
+  const layout = getStripLayout(layoutId)
   const paper = paperStyles[paperId]
   const frame = frameStyles[frameId]
-  const frames = Array.from({ length: 4 }, (_, index) => photos[index])
+  const frames = Array.from({ length: layout.shotCount }, (_, index) => photos[index])
+  const cellAspect = aspectClass(layout.photoAspect, compact)
+  const isGrid = layout.arrangement === 'grid-2x2'
+  const maxWidth = compact
+    ? Math.round(layout.previewMaxWidth * 0.78)
+    : layout.previewMaxWidth
 
   return (
     <div
       ref={exportRef}
-      className={`mx-auto w-full ${compact ? 'max-w-[230px]' : 'max-w-[292px]'}`}
-      style={{ color: paper.foreground }}
+      className="mx-auto w-full"
+      style={{ color: paper.foreground, maxWidth }}
     >
       <div className={`rounded-[30px] p-3 ${backdropStyles[backdropId]}`}>
         <div
@@ -130,17 +153,15 @@ export function PolaroidPreview({
         >
           <div className={`${frame.padding} ${frame.photoBorder} ${frame.radius} bg-white/70`}>
             <div
-              className={`space-y-3 overflow-hidden ${
+              className={`overflow-hidden ${
                 frameId === 'none' ? 'rounded-[14px]' : 'rounded-[12px]'
-              }`}
+              } ${isGrid ? 'grid grid-cols-2 gap-2.5' : 'space-y-3'}`}
               style={{ backgroundColor: paper.background }}
             >
               {frames.map((photo, index) => (
                 <article
                   key={photo?.id ?? `polaroid-slot-${index}`}
-                  className={`relative overflow-hidden rounded-[10px] ${
-                    compact ? 'aspect-[4/4.85]' : 'aspect-[4/4.65]'
-                  }`}
+                  className={`relative overflow-hidden rounded-[10px] ${cellAspect}`}
                   style={{ backgroundColor: paper.background }}
                 >
                   {photo?.src ? (

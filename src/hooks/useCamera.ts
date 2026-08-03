@@ -13,7 +13,7 @@ export type CameraStatus =
 export type CameraPlatform = 'ios' | 'android' | 'mac' | 'windows' | 'other'
 
 type FacingMode = 'user' | 'environment'
-const photoAspectRatio = 4 / 4.65
+const defaultPhotoAspectRatio = 4 / 4.65
 
 function stopStream(stream: MediaStream | null) {
   stream?.getTracks().forEach((track) => track.stop())
@@ -64,16 +64,21 @@ export function detectCameraPlatform(): CameraPlatform {
   return 'other'
 }
 
-export function useCamera() {
+export function useCamera(photoAspectRatio = defaultPhotoAspectRatio) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const requestIdRef = useRef(0)
+  const aspectRatioRef = useRef(photoAspectRatio)
   const [status, setStatus] = useState<CameraStatus>('idle')
   const [facingMode, setFacingMode] = useState<FacingMode>('user')
   const [canSwitchCamera, setCanSwitchCamera] = useState(false)
   const [permissionState, setPermissionState] = useState<PermissionState | 'unknown'>(
     'unknown',
   )
+
+  useEffect(() => {
+    aspectRatioRef.current = photoAspectRatio
+  }, [photoAspectRatio])
 
   const refreshVideoInputs = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) {
@@ -124,7 +129,7 @@ export function useCamera() {
             facingMode: { ideal: nextFacingMode },
             width: { ideal: 1920 },
             height: { ideal: 1080 },
-            aspectRatio: { ideal: photoAspectRatio },
+            aspectRatio: { ideal: aspectRatioRef.current },
           },
         })
 
@@ -181,6 +186,7 @@ export function useCamera() {
 
   const captureFrame = useCallback(() => {
     const video = videoRef.current
+    const targetAspect = aspectRatioRef.current
 
     if (status !== 'ready' || !video || !video.videoWidth || !video.videoHeight) {
       return null
@@ -188,13 +194,13 @@ export function useCamera() {
 
     const sourceAspectRatio = video.videoWidth / video.videoHeight
     const sourceWidth =
-      sourceAspectRatio > photoAspectRatio
-        ? video.videoHeight * photoAspectRatio
+      sourceAspectRatio > targetAspect
+        ? video.videoHeight * targetAspect
         : video.videoWidth
     const sourceHeight =
-      sourceAspectRatio > photoAspectRatio
+      sourceAspectRatio > targetAspect
         ? video.videoHeight
-        : video.videoWidth / photoAspectRatio
+        : video.videoWidth / targetAspect
     const sourceX = (video.videoWidth - sourceWidth) / 2
     const sourceY = (video.videoHeight - sourceHeight) / 2
     const maxHeight = 1600

@@ -1,10 +1,12 @@
 import type {
   FilterId,
+  LayoutId,
   MockPhoto,
   PolaroidBackdropId,
   PolaroidFrameId,
   PolaroidPaperId,
 } from '../types'
+import { getStripLayout } from '../data/layouts'
 
 type ExportPolaroidOptions = {
   photos: MockPhoto[]
@@ -13,6 +15,7 @@ type ExportPolaroidOptions = {
   backdropId: PolaroidBackdropId
   frameId: PolaroidFrameId
   footerText: string
+  layoutId?: LayoutId
 }
 
 const paperColors: Record<PolaroidPaperId, string> = {
@@ -113,6 +116,48 @@ function drawCoverImage(
   context.restore()
 }
 
+async function drawPhotoCell(
+  context: CanvasRenderingContext2D,
+  photos: MockPhoto[],
+  index: number,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  frameWidth: number,
+  frameColor: string,
+  frameId: PolaroidFrameId,
+  filterId: FilterId,
+  canvasWidth: number,
+) {
+  if (frameWidth) {
+    roundedRect(
+      context,
+      x - frameWidth,
+      y - frameWidth,
+      width + frameWidth * 2,
+      height + frameWidth * 2,
+      frameId === 'soft-white' ? 30 : 20,
+    )
+    context.fillStyle = frameColor
+    context.fill()
+  }
+
+  const photo = photos[index]
+  if (photo?.src) {
+    const image = await loadImage(photo.src)
+    drawCoverImage(context, image, x, y, width, height, 14, filterId)
+  } else {
+    roundedRect(context, x, y, width, height, 14)
+    context.fillStyle = '#f5ebe4'
+    context.fill()
+    context.fillStyle = '#a4888c'
+    context.font = '600 24px system-ui, sans-serif'
+    context.textAlign = 'center'
+    context.fillText(`EMPTY 0${index + 1}`, canvasWidth / 2, y + height / 2)
+  }
+}
+
 export async function createPolaroidPng({
   photos,
   filterId,
@@ -120,22 +165,45 @@ export async function createPolaroidPng({
   backdropId,
   frameId,
   footerText,
+  layoutId = 'a',
 }: ExportPolaroidOptions): Promise<Blob> {
+  const layout = getStripLayout(layoutId)
   const hasFooter = Boolean(footerText.trim())
   const canvas = document.createElement('canvas')
-  // The export is cropped exactly to the physical photo strip. Page background
-  // and surrounding UI are deliberately outside this canvas.
-  canvas.width = 960
-  canvas.height = hasFooter ? 4040 : 3916
   const context = canvas.getContext('2d')
   if (!context) throw new Error('Canvas is not available')
 
-  const paperX = 39
-  const paperY = 39
-  const paperWidth = canvas.width - 78
-  const paperHeight = canvas.height - 78
+  const frameColor = frameId === 'black' ? '#161316' : '#ffffff'
+  const frameWidth = frameId === 'none' ? 0 : frameId === 'soft-white' ? 34 : 24
+  const paperInset = 39
+  const contentInset = 52
+  const photoGap = layout.arrangement === 'grid-2x2' ? 28 : 39
+  const footerBand = hasFooter ? 120 : 0
+
+  if (layout.arrangement === 'grid-2x2') {
+    canvas.width = 1200
+    const contentWidth = canvas.width - paperInset * 2 - contentInset * 2
+    const cellWidth = (contentWidth - photoGap) / 2
+    const cellHeight = cellWidth / layout.photoAspect
+    const contentHeight = cellHeight * 2 + photoGap
+    canvas.height = paperInset * 2 + contentInset * 2 + contentHeight + footerBand
+  } else {
+    const baseWidth = layout.id === 'traditional' ? 820 : layout.id === 'c' ? 1100 : 960
+    canvas.width = baseWidth
+    const contentWidth = canvas.width - paperInset * 2 - contentInset * 2
+    const photoHeight = contentWidth / layout.photoAspect
+    const contentHeight =
+      layout.shotCount * photoHeight + (layout.shotCount - 1) * photoGap
+    canvas.height = paperInset * 2 + contentInset * 2 + contentHeight + footerBand
+  }
+
+  const paperX = paperInset
+  const paperY = paperInset
+  const paperWidth = canvas.width - paperInset * 2
+  const paperHeight = canvas.height - paperInset * 2 - (hasFooter ? 0 : 0)
   const paperColor = paperColors[paperId]
   const textColor = textColors[paperId]
+
   roundedRect(context, paperX, paperY, paperWidth, paperHeight, 52)
   context.fillStyle = paperColor
   context.fill()
@@ -151,41 +219,53 @@ export async function createPolaroidPng({
   context.lineWidth = 3
   context.stroke()
 
-  const frameColor = frameId === 'black' ? '#161316' : '#ffffff'
-  const frameWidth = frameId === 'none' ? 0 : frameId === 'soft-white' ? 34 : 24
-  // These measurements mirror the preview: a narrow vertical four-cut strip
-  // with 4:4.65 frames, not a wide collage.
-  const contentX = paperX + 52
-  const contentWidth = paperWidth - 104
-  const photoHeight = (contentWidth * 4.65) / 4
-  const photoGap = 39
-  const photoStartY = paperY + 52
+  const contentX = paperX + contentInset
+  const contentWidth = paperWidth - contentInset * 2
+  const photoStartY = paperY + contentInset
 
-  for (let index = 0; index < 4; index += 1) {
-    const photoY = photoStartY + index * (photoHeight + photoGap)
-    const frameX = contentX - frameWidth
-    const frameY = photoY - frameWidth
-    const frameSizeWidth = contentWidth + frameWidth * 2
-    const frameSizeHeight = photoHeight + frameWidth * 2
+  if (layout.arrangement === 'grid-2x2') {
+    const cellWidth = (contentWidth - photoGap) / 2
+    const cellHeight = cellWidth / layout.photoAspect
 
-    if (frameWidth) {
-      roundedRect(context, frameX, frameY, frameSizeWidth, frameSizeHeight, frameId === 'soft-white' ? 30 : 20)
-      context.fillStyle = frameColor
-      context.fill()
+    for (let index = 0; index < layout.shotCount; index += 1) {
+      const col = index % 2
+      const row = Math.floor(index / 2)
+      const x = contentX + col * (cellWidth + photoGap)
+      const y = photoStartY + row * (cellHeight + photoGap)
+      await drawPhotoCell(
+        context,
+        photos,
+        index,
+        x,
+        y,
+        cellWidth,
+        cellHeight,
+        frameWidth,
+        frameColor,
+        frameId,
+        filterId,
+        canvas.width,
+      )
     }
+  } else {
+    const photoHeight = contentWidth / layout.photoAspect
 
-    const photo = photos[index]
-    if (photo?.src) {
-      const image = await loadImage(photo.src)
-      drawCoverImage(context, image, contentX, photoY, contentWidth, photoHeight, 14, filterId)
-    } else {
-      roundedRect(context, contentX, photoY, contentWidth, photoHeight, 14)
-      context.fillStyle = '#f5ebe4'
-      context.fill()
-      context.fillStyle = '#a4888c'
-      context.font = '600 24px system-ui, sans-serif'
-      context.textAlign = 'center'
-      context.fillText(`EMPTY 0${index + 1}`, canvas.width / 2, photoY + photoHeight / 2)
+    for (let index = 0; index < layout.shotCount; index += 1) {
+      const y = photoStartY + index * (photoHeight + photoGap)
+      await drawPhotoCell(
+        context,
+        photos,
+        index,
+        contentX,
+        y,
+        contentWidth,
+        photoHeight,
+        frameWidth,
+        frameColor,
+        frameId,
+        filterId,
+        canvas.width,
+      )
     }
   }
 
@@ -193,7 +273,7 @@ export async function createPolaroidPng({
     context.fillStyle = textColor
     context.textAlign = 'center'
     context.font = '600 36px system-ui, sans-serif'
-    context.fillText(footerText.trim(), canvas.width / 2, 3935)
+    context.fillText(footerText.trim(), canvas.width / 2, canvas.height - 48)
   }
 
   return new Promise((resolve, reject) => {
