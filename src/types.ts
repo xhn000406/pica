@@ -19,6 +19,13 @@ export type BorderToneId = 'butter' | 'blush' | 'mint' | 'midnight'
 
 export type FilterId = 'original' | 'mono' | 'sun-kiss' | 'cool-pop'
 
+export type CameraFilterId =
+  | 'original'
+  | 'ccd-blue'
+  | 'flash-2000'
+  | 'film-35'
+  | 'night-chrome'
+
 export type StickerId = 'spark' | 'bestie' | 'date' | 'flash'
 
 export type PolaroidPaperId = 'white' | 'cream' | 'pink' | 'blue' | 'black'
