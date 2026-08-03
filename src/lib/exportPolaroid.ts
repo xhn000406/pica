@@ -56,8 +56,7 @@ function roundedRect(
 
 function drawPaperBackdrop(context: CanvasRenderingContext2D, backdropId: PolaroidBackdropId) {
   if (backdropId === 'none') {
-    context.fillStyle = '#ffffff'
-    context.fillRect(0, 0, context.canvas.width, context.canvas.height)
+    return
   }
 
   if (backdropId === 'blue' || backdropId === 'cream-paper') {
@@ -179,31 +178,35 @@ export async function createPolaroidPng({
   const contentInset = 52
   const photoGap = layout.arrangement === 'grid-2x2' ? 28 : 39
   const footerBand = hasFooter ? 120 : 0
+  let outerCanvasWidth: number
+  let outerCanvasHeight: number
 
   if (layout.arrangement === 'grid-2x2') {
-    canvas.width = 1200
-    const contentWidth = canvas.width - paperInset * 2 - contentInset * 2
+    outerCanvasWidth = 1200
+    const contentWidth = outerCanvasWidth - paperInset * 2 - contentInset * 2
     const cellWidth = (contentWidth - photoGap) / 2
     const cellHeight = cellWidth / layout.photoAspect
     const contentHeight = cellHeight * 2 + photoGap
-    canvas.height = paperInset * 2 + contentInset * 2 + contentHeight + footerBand
+    outerCanvasHeight = paperInset * 2 + contentInset * 2 + contentHeight + footerBand
   } else {
     const baseWidth = layout.id === 'traditional' ? 820 : layout.id === 'c' ? 1100 : 960
-    canvas.width = baseWidth
-    const contentWidth = canvas.width - paperInset * 2 - contentInset * 2
+    outerCanvasWidth = baseWidth
+    const contentWidth = outerCanvasWidth - paperInset * 2 - contentInset * 2
     const photoHeight = contentWidth / layout.photoAspect
     const contentHeight =
       layout.shotCount * photoHeight + (layout.shotCount - 1) * photoGap
-    canvas.height = paperInset * 2 + contentInset * 2 + contentHeight + footerBand
+    outerCanvasHeight = paperInset * 2 + contentInset * 2 + contentHeight + footerBand
   }
+
+  const paperWidth = outerCanvasWidth - paperInset * 2
+  const paperHeight = outerCanvasHeight - paperInset * 2
+  canvas.width = outerCanvasWidth
+  canvas.height = outerCanvasHeight
 
   const paperX = paperInset
   const paperY = paperInset
-  const paperWidth = canvas.width - paperInset * 2
-  const paperHeight = canvas.height - paperInset * 2 - (hasFooter ? 0 : 0)
   const paperColor = paperColors[paperId]
   const textColor = textColors[paperId]
-
   roundedRect(context, paperX, paperY, paperWidth, paperHeight, 52)
   context.fillStyle = paperColor
   context.fill()
