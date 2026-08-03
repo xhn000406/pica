@@ -32,7 +32,7 @@
 - Produces `CameraFilterId`, `cameraFilters`, `cameraFilterOrder`, and `getCameraFilter(id)`.
 - `CameraFilterPreset` contains `id`, `label`, `shortLabel`, `liveFilter`, `overlayClass`, and deterministic canvas values for saturation, contrast, brightness, tint, grain, vignette, and bloom.
 
-- [ ] **Step 1: Add a failing preset test**
+- [x] **Step 1: Add a failing preset test**
 
 ```ts
 import { cameraFilterOrder, getCameraFilter } from './cameraFilters'
@@ -44,13 +44,13 @@ test('keeps Original first and exposes the four approved camera looks', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test and confirm it fails because the module does not exist**
+- [x] **Step 2: Run the test and confirm it fails because the module does not exist**
 
 Run: `npx vitest run src/data/cameraFilters.test.ts`
 
 Expected: module-not-found failure for `./cameraFilters`.
 
-- [ ] **Step 3: Add Vitest and the preset module**
+- [x] **Step 3: Add Vitest and the preset module**
 
 Install `vitest`, `jsdom`, `@testing-library/react`, and `@testing-library/user-event` as development dependencies. Add `"test": "vitest run"` to `package.json`, then add this test block to `vite.config.ts`:
 
@@ -75,13 +75,13 @@ export function getCameraFilter(id: CameraFilterId) {
 
 Use neutral canvas values for Original. Give each non-original look a distinct CSS filter and matching deterministic Canvas parameters; no random per-frame variation.
 
-- [ ] **Step 4: Run the preset test and full checks**
+- [x] **Step 4: Run the preset test and full checks**
 
 Run: `npm test -- src/data/cameraFilters.test.ts && npm run build && npm run lint`
 
 Expected: all commands exit `0`.
 
-- [ ] **Step 5: Commit the isolated preset layer**
+- [x] **Step 5: Commit the isolated preset layer**
 
 ```bash
 git add package.json package-lock.json vite.config.ts src/types.ts src/data/cameraFilters.ts src/data/cameraFilters.test.ts
@@ -100,7 +100,7 @@ git commit -m "feat: define camera lens filters"
 - Produces `renderCameraFilter(context, width, height, preset)`.
 - Changes `captureFrame` to `(filterId: CameraFilterId) => string | null`.
 
-- [ ] **Step 1: Write a failing renderer test**
+- [x] **Step 1: Write a failing renderer test**
 
 ```ts
 test('does not alter canvas state for Original', () => {
@@ -111,13 +111,13 @@ test('does not alter canvas state for Original', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test and confirm the missing renderer fails**
+- [x] **Step 2: Run the test and confirm the missing renderer fails**
 
 Run: `npm test -- src/lib/renderCameraFilter.test.ts`
 
 Expected: module-not-found failure for `./renderCameraFilter`.
 
-- [ ] **Step 3: Implement canvas rendering and wire it into capture**
+- [x] **Step 3: Implement canvas rendering and wire it into capture**
 
 ```ts
 context.filter = `saturate(${preset.canvas.saturation}) contrast(${preset.canvas.contrast}) brightness(${preset.canvas.brightness})`
@@ -127,13 +127,13 @@ renderCameraFilter(context, width, height, preset)
 
 `renderCameraFilter` uses repeatable seeded grain derived from pixel coordinates, a clipped radial vignette, and a low-alpha tint/bloom layer. It returns immediately for Original. Preserve the current front-camera mirror behavior before drawing the filtered frame.
 
-- [ ] **Step 4: Run renderer and project checks**
+- [x] **Step 4: Run renderer and project checks**
 
 Run: `npm test -- src/lib/renderCameraFilter.test.ts && npm run build && npm run lint`
 
 Expected: all commands exit `0`.
 
-- [ ] **Step 5: Commit capture rendering**
+- [x] **Step 5: Commit capture rendering**
 
 ```bash
 git add src/lib/renderCameraFilter.ts src/lib/renderCameraFilter.test.ts src/hooks/useCamera.ts
@@ -153,7 +153,7 @@ git commit -m "feat: bake lens filters into captures"
 - `CameraFilterDial({ value, disabled, onChange })` emits a selected `CameraFilterId`.
 - `CameraPage` receives `cameraFilterId` and `onCameraFilterChange`.
 
-- [ ] **Step 1: Write a failing component test**
+- [x] **Step 1: Write a failing component test**
 
 ```tsx
 render(<CameraFilterDial value="original" disabled={false} onChange={onChange} />)
@@ -161,23 +161,23 @@ await user.click(screen.getByRole('button', { name: /CCD Blue/i }))
 expect(onChange).toHaveBeenCalledWith('ccd-blue')
 ```
 
-- [ ] **Step 2: Run the test and confirm the absent dial fails**
+- [x] **Step 2: Run the test and confirm the absent dial fails**
 
 Run: `npm test -- src/components/CameraFilterDial.test.tsx`
 
 Expected: module-not-found failure for `./CameraFilterDial`.
 
-- [ ] **Step 3: Implement the dial and state flow**
+- [x] **Step 3: Implement the dial and state flow**
 
 Render the dial below the viewfinder. Apply `preset.liveFilter` to the video and `preset.overlayClass` above it. In `App`, initialize state as `original`; pass the selected filter to capture; reset it to `original` in `resetSession`. Disable all lens buttons whenever `capturedPhotos.length > 0` or a capture is currently locked. Add concise Chinese and English labels for “Lens look”, “Locked after first photo”, and each mode.
 
-- [ ] **Step 4: Verify the full user flow**
+- [x] **Step 4: Verify the full user flow**
 
 Run: `npm test && npm run build && npm run lint`
 
 Manual check: select each mode, confirm the live video changes, take a photo, compare its session-strip frame to the live look, confirm the dial locks, restart, then confirm Original is selected and the dial unlocks.
 
-- [ ] **Step 5: Commit the complete camera lens experience**
+- [x] **Step 5: Commit the complete camera lens experience**
 
 ```bash
 git add src/components/CameraFilterDial.tsx src/components/CameraFilterDial.test.tsx src/App.tsx src/pages/CameraPage.tsx src/locales.ts
