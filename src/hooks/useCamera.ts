@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { getCameraFilter } from '../data/cameraFilters'
+import { renderCameraFilter } from '../lib/renderCameraFilter'
+import type { CameraFilterId } from '../types'
+
 export type CameraStatus =
   | 'idle'
   | 'requesting'
@@ -184,7 +188,7 @@ export function useCamera(photoAspectRatio = defaultPhotoAspectRatio) {
     await startCamera(nextFacingMode)
   }, [facingMode, startCamera])
 
-  const captureFrame = useCallback(() => {
+  const captureFrame = useCallback((cameraFilterId: CameraFilterId = 'original') => {
     const video = videoRef.current
     const targetAspect = aspectRatioRef.current
 
@@ -222,7 +226,11 @@ export function useCamera(photoAspectRatio = defaultPhotoAspectRatio) {
       context.scale(-1, 1)
     }
 
+    const cameraFilter = getCameraFilter(cameraFilterId)
+    context.filter = `saturate(${cameraFilter.canvas.saturation}) contrast(${cameraFilter.canvas.contrast}) brightness(${cameraFilter.canvas.brightness})`
     context.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height)
+    context.filter = 'none'
+    renderCameraFilter(context, width, height, cameraFilter)
     return canvas.toDataURL('image/jpeg', 0.92)
   }, [facingMode, status])
 
