@@ -10,8 +10,9 @@ describe('CameraFilterDial', () => {
     const user = userEvent.setup()
 
     render(<CameraFilterDial value="original" disabled={false} onChange={onChange} />)
-    await user.click(screen.getByRole('button', { name: /CCD Blue/i }))
+    expect(screen.getByText('FUJIFILM STYLE')).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: /select FXN camera look/i }))
 
-    expect(onChange).toHaveBeenCalledWith('ccd-blue')
+    expect(onChange).toHaveBeenCalledWith('fxn')
   })
 })

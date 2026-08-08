@@ -21,10 +21,11 @@ export type FilterId = 'original' | 'mono' | 'sun-kiss' | 'cool-pop'
 
 export type CameraFilterId =
   | 'original'
-  | 'ccd-blue'
-  | 'flash-2000'
-  | 'film-35'
-  | 'night-chrome'
+  | 'fxn'
+  | 'grd'
+  | 'fqs'
+  | 'd-funs'
+  | 'classic-u'
 
 export type StickerId = 'spark' | 'bestie' | 'date' | 'flash'
 
